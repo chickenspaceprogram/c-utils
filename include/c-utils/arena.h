@@ -26,23 +26,23 @@ typedef struct cu_arena {
 } cu_arena;
 
 // Creates a new arena with a requested block size.
-void arena_new(cu_arena *arena, size_t block_size);
+void cu_arena_new(cu_arena *arena, size_t block_size);
 
-void *arena_alloc(cu_arena *arena, size_t item_size);
+void *cu_arena_alloc(cu_arena *arena, size_t item_size);
 
-void arena_free(cu_arena *arena);
+void cu_arena_free(cu_arena *arena);
 
 
 
 
 // if you have a custom allocator, use the *_size functions to see what size buffer will be needed, allocate the buffer yourself, then pass that buffer to the matching *_buf function
 
-size_t arena_alloc_size(cu_arena *arena, size_t item_size); // if no allocation is required, this function will return 0
-void *arena_alloc_buf(cu_arena *arena, size_t item_size, void *buffer); // if arena_alloc_size returned 0, you may safely pass NULL in as `buffer`
+size_t cu_arena_alloc_size(cu_arena *arena, size_t item_size); // if no allocation is required, this function will return 0
+void *cu_arena_alloc_buf(cu_arena *arena, size_t item_size, void *buffer); // if arena_alloc_size returned 0, you may safely pass NULL in as `buffer`
 
 
 // returns one of the pointers you gave to arena_new_buf or arena_alloc_buf
 // you must continue calling this function until it returns NULL to successfully free the arena
-void *arena_free_buf(cu_arena *arena);
+void *cu_arena_free_buf(cu_arena *arena);
 
 

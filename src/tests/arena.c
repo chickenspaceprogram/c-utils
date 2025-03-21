@@ -26,18 +26,18 @@
 
 
 void test_malloc(void) {
-    struct arena arena;
-    arena_new(&arena, 2 * sizeof(int)); // yeah it's a small block size ik
-    int *int1 = arena_alloc(&arena, sizeof(int));
+    cu_arena arena;
+    cu_arena_new(&arena, 2 * sizeof(int)); // yeah it's a small block size ik
+    int *int1 = cu_arena_alloc(&arena, sizeof(int));
     *int1 = 12;
-    int *int2 = arena_alloc(&arena, sizeof(int));
+    int *int2 = cu_arena_alloc(&arena, sizeof(int));
     *int2  = 34;
-    int *int3 = arena_alloc(&arena, sizeof(int));
+    int *int3 = cu_arena_alloc(&arena, sizeof(int));
     *int3  = 56;
-    int *int4 = arena_alloc(&arena, sizeof(int));
+    int *int4 = cu_arena_alloc(&arena, sizeof(int));
     *int4 = 78;
 
-    int *massive_object = arena_alloc(&arena, sizeof(int) * 20);
+    int *massive_object = cu_arena_alloc(&arena, sizeof(int) * 20);
     for (int i = 0; i < 20; ++i) {
         massive_object[i] = 100 * i;
     }
@@ -51,7 +51,7 @@ void test_malloc(void) {
         assert(massive_object[i] == 100 * i);
     }
 
-    arena_free(&arena);
+    cu_arena_free(&arena);
 
 }
 

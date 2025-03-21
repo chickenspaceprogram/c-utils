@@ -26,7 +26,7 @@ struct arena_elem {
     size_t amount_filled;
 };
 
-size_t arena_new_size(size_t block_size) {
+size_t cu_arena_new_size(size_t block_size) {
     return sizeof(cu_arena) + block_size;
 }
 
@@ -53,13 +53,13 @@ static void *setup_new_node(cu_arena *arena, void *buffer, size_t item_size) {
     
 }
 
-void arena_new(cu_arena *arena, size_t block_size) {
+void cu_arena_new(cu_arena *arena, size_t block_size) {
     arena->first = NULL;
     arena->default_block_size = block_size;
 }
 
-void *arena_alloc(cu_arena *arena, size_t item_size) {
-    size_t alloc_size = arena_alloc_size(arena, item_size);
+void *cu_arena_alloc(cu_arena *arena, size_t item_size) {
+    size_t alloc_size = cu_arena_alloc_size(arena, item_size);
     void *buffer = NULL;
     if (alloc_size != 0) {
         buffer = malloc(alloc_size);
@@ -67,16 +67,16 @@ void *arena_alloc(cu_arena *arena, size_t item_size) {
             return NULL;
         }
     }
-    return arena_alloc_buf(arena, item_size, buffer);
+    return cu_arena_alloc_buf(arena, item_size, buffer);
 }
 
-void arena_free(cu_arena *arena) {
-    for (void *freeable = arena_free_buf(arena); freeable != NULL; freeable = arena_free_buf(arena)) {
+void cu_arena_free(cu_arena *arena) {
+    for (void *freeable = cu_arena_free_buf(arena); freeable != NULL; freeable = cu_arena_free_buf(arena)) {
         free(freeable);
     }
 }
 
-size_t arena_alloc_size(cu_arena *arena, size_t item_size) {
+size_t cu_arena_alloc_size(cu_arena *arena, size_t item_size) {
     if (find_allocatable_elem(arena->first, item_size) != NULL) {
         return 0;
     }
@@ -86,7 +86,7 @@ size_t arena_alloc_size(cu_arena *arena, size_t item_size) {
     return arena->default_block_size + sizeof(struct arena_elem); // will have to make a new node
 }
 
-void *arena_alloc_buf(cu_arena *arena, size_t item_size, void *buffer) {
+void *cu_arena_alloc_buf(cu_arena *arena, size_t item_size, void *buffer) {
     if (arena->first == NULL) {
         return setup_new_node(arena, buffer, item_size);
     }
@@ -101,7 +101,7 @@ void *arena_alloc_buf(cu_arena *arena, size_t item_size, void *buffer) {
     return (char *)allocatable_node + sizeof(struct arena_elem) + allocatable_node->amount_filled;
 }
 
-void *arena_free_buf(cu_arena *arena) {
+void *cu_arena_free_buf(cu_arena *arena) {
     if (arena->first == NULL) {
         return NULL;
     }
