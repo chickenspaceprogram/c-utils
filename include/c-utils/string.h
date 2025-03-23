@@ -21,7 +21,7 @@
 #include <c-utils/arena.h>
 
 typedef struct cu_str {
-    unsigned char *string;
+    char *string;
     size_t len;
 } cu_str;
 
@@ -29,6 +29,12 @@ typedef struct cu_str_pair {
     cu_str fst;
     cu_str snd;
 } cu_str_pair;
+
+// Allocates a new cu_str.
+//
+// If the allocation fails, cu_str.string will be equal to NULL.
+// Passing this string to any other functions is undefined behavior until it has been completely filled with data.
+cu_str cu_str_new_empty(cu_arena *allocator, size_t len);
 
 // Copies the array of `char` pointed to by `string` into a `cu_str`.
 // The `cu_str` is allocated on the allocator `allocator`.
@@ -95,7 +101,7 @@ int cu_str_cmp(const cu_str *string1, const cu_str *string2);
 // If the allocation fails, *out will be equal to NULL.
 // 
 // Each token does not contain the delimiter. However, as the tokens are each views of `string`, it is valid to access all but the last token one past their length to see the delimiter character.
-size_t cu_str_tok(cu_arena *allocator, cu_str *string, const cu_str *delims, cu_str **out);
+size_t cu_str_tok(cu_arena *allocator, cu_str *string, const cu_str *delims, cu_str **const out);
 
 // Searches `string` for an instance of `character`.
 // If the character is found, its index will be returned.
@@ -103,14 +109,14 @@ size_t cu_str_tok(cu_arena *allocator, cu_str *string, const cu_str *delims, cu_
 size_t cu_str_getchr(const cu_str *string, char character);
 
 // Searches `string` for the substring `search_string`.
-// If the substring is found, its index will be returned.
+// If the substring is found, the index of the start of the substring will be returned.
 // If not, the length of `string` will be returned.
-size_t cu_str_getstr(const cu_str *string, const cu_str *search_string);
+size_t cu_str_getstr(cu_str *string, const cu_str *search_string);
 
 void cu_str_rev(cu_str *string);
 
 // makes a copy of `string` with every instance of `target` replaced by `replacement`
-cu_str cu_str_replace(cu_arena *allocator, const cu_str *string, const cu_str *target, const cu_str *replacement);
+cu_str cu_str_replace(cu_arena *allocator, cu_str *string, const cu_str *target, const cu_str *replacement);
 
 
 // these just apply the toupper/tolower functions in ctype.h to every character
