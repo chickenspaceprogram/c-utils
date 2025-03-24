@@ -96,6 +96,9 @@ cu_str cu_str_cat(cu_arena *allocator, const cu_str *strings, size_t num_strings
 // If string1 > string2, a number greater than 0 is returned.
 int cu_str_cmp(const cu_str *string1, const cu_str *string2);
 
+// Checks if the string is empty.
+int cu_str_isempty(const cu_str *string);
+
 // Breaks `string` up into tokens, delimited by any of the characters in `delims`.
 // The number of tokens is returned, and the tokens are stored in an array allocated with `allocator` and stored at `out`.
 // If the allocation fails, *out will be equal to NULL.

@@ -25,3 +25,11 @@ add_test(
     NAME test-arena
     COMMAND $<TARGET_FILE:test-arena>
 )
+
+add_executable(test-string string.c)
+target_link_libraries(test-string PRIVATE c-utils)
+
+add_test(
+    NAME test-string
+    COMMAND $<TARGET_FILE:test-string>
+)

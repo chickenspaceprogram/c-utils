@@ -3,6 +3,13 @@
 #include <c-utils/string.h>
 
 cu_str cu_str_new_empty(cu_arena *allocator, size_t len) {
+    if (len == 0) {
+        cu_str new_string = {
+            .string = NULL,
+            .len = 0,
+        };
+        return new_string;
+    }
     cu_str new_string = {
         .string = cu_arena_alloc(allocator, len),
         .len = len,
@@ -42,6 +49,13 @@ cu_str cu_str_copy(cu_arena *allocator, const cu_str *string) {
 }
 
 cu_str cu_str_view(cu_str *string, size_t start, size_t end) {
+    if (start == end) {
+        cu_str new_view = {
+            .string = NULL,
+            .len = 0,
+        };
+        return new_view;
+    }
     cu_str new_view = {
         .string = string->string + start,
         .len = end - start,
@@ -71,7 +85,14 @@ int cu_str_cmp(const cu_str *string1, const cu_str *string2) {
     if (string1->len < string2->len) {
         return -1;
     }
-    return memcmp(string1, string2, string1->len);
+    return memcmp(string1->string, string2->string, string1->len);
+}
+
+int cu_str_isempty(const cu_str *string) {
+    if (string->string == NULL && string->len == 0) {
+        return 1;
+    }
+    return 0;
 }
 
 size_t cu_str_tok(cu_arena *allocator, cu_str *string, const cu_str *delims, cu_str **const out) {
@@ -101,16 +122,13 @@ size_t cu_str_tok(cu_arena *allocator, cu_str *string, const cu_str *delims, cu_
     for (size_t i = 0; i < string->len; ++i) {
         for (size_t j = 0; j < delims->len; ++j) {
             if (string->string[i] == delims->string[j]) {
-                (*out)[num_toks] = cu_str_view(string, start_index, i);
-                start_index = ++i;
-                ++num_toks;
+                (*out)[num_toks++] = cu_str_view(string, start_index, i);
+                start_index = i + 1;
                 break;
             }
         }
     }
-    if (start_index < string->len) {
-        (*out)[num_toks] = cu_str_view(string, start_index, string->len);
-    }
+    (*out)[num_toks++] = cu_str_view(string, start_index, string->len);
     return num_toks;
 }
 
@@ -123,14 +141,18 @@ size_t cu_str_getchr(const cu_str *string, char character) {
 }
 
 size_t cu_str_getstr(cu_str *string, const cu_str *search_string) {
-    size_t index = 0;
-    while ((index = cu_str_getchr(string, search_string->string[0])) != string->len) {
-        if (index + search_string->len > string->len) {
-            break;
-        }
-        cu_str view = cu_str_view(string, index, search_string->len);
-        if (cu_str_cmp(&view, search_string) == 0) {
-            return index;
+    if (search_string->len > string->len) {
+        return string->len;
+    }
+    if (string->string == NULL) {
+        return string->len;
+    }
+    if (search_string->string == NULL) {
+        return string->len;
+    }
+    for (size_t i = 0; i <= string->len - search_string->len; ++i) {
+        if (memcmp(string->string + i, search_string->string, search_string->len) ==0) {
+            return i;
         }
     }
     return string->len;
