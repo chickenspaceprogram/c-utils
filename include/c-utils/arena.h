@@ -20,9 +20,10 @@
 
 #include <stddef.h>
 
+
 typedef struct cu_arena {
-    struct arena_elem *first;
-    size_t default_block_size;
+	struct arena_elem *first;
+	size_t default_block_size;
 } cu_arena;
 
 // Creates a new arena with a requested block size.

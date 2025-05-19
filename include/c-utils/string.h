@@ -21,13 +21,13 @@
 #include <c-utils/arena.h>
 
 typedef struct cu_str {
-    char *string;
-    size_t len;
+	char *string;
+	size_t len;
 } cu_str;
 
 typedef struct cu_str_pair {
-    cu_str fst;
-    cu_str snd;
+	cu_str fst;
+	cu_str snd;
 } cu_str_pair;
 
 // Allocates a new cu_str.
