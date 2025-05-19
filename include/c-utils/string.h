@@ -18,7 +18,7 @@
 
 #pragma once
 #include <stddef.h>
-#include <c-utils/arena.h>
+#include <c-utils/mem.h>
 
 typedef struct cu_str {
 	char *string;

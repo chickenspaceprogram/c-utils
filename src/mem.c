@@ -18,7 +18,8 @@
 
 #include <stdlib.h>
 #include <string.h>
-#include <c-utils/arena.h>
+#include <stdbool.h>
+#include <c-utils/mem.h>
 
 struct arena_elem {
 	struct arena_elem *next;
@@ -26,9 +27,42 @@ struct arena_elem {
 	size_t amount_filled;
 };
 
+void *cu_allocator_realloc(void *mem, size_t newsize, size_t oldsize, const struct cu_allocator *alloc)
+{
+	if (alloc->realloc == NULL) {
+		void *newbuf = alloc->alloc(newsize, alloc->ctx);
+		if (newbuf == NULL) {
+			return NULL;
+		}
+		memcpy(newbuf, mem, oldsize);
+		alloc->free(mem, oldsize, alloc->ctx);
+	}
+	return alloc->realloc(mem, newsize, oldsize, alloc->ctx);
+}
+
+bool check_mult_overflow(size_t n1, size_t n2)
+{
+	// should in theory work
+	size_t div1 = SIZE_MAX / n1;
+	if (div1 < n2) {
+		return true;
+	}
+	return false;
+}
+
+void *cu_allocator_reallocarray(void *mem, size_t new_nel, size_t old_nel, size_t elem_size, const struct cu_allocator *alloc)
+{
+	if (check_mult_overflow(new_nel, elem_size)) {
+		return NULL;
+	}
+	return cu_allocator_realloc(mem, new_nel * elem_size, old_nel * elem_size, alloc);
+}
+
+
+
 size_t cu_arena_new_size(size_t block_size)
 {
-	return sizeof(cu_arena) + block_size;
+	return sizeof(struct cu_arena) + block_size;
 }
 
 static struct arena_elem *find_allocatable_elem(struct arena_elem *first, size_t item_size)
@@ -42,7 +76,7 @@ static struct arena_elem *find_allocatable_elem(struct arena_elem *first, size_t
 }
 
 // returns a pointer to the data space
-static void *setup_new_node(cu_arena *arena, void *buffer, size_t item_size)
+static void *setup_new_node(struct cu_arena *arena, void *buffer, size_t item_size)
 {
 		size_t alloc_size = (item_size > arena->default_block_size) ? item_size : arena->default_block_size; 
 		struct arena_elem new_node = {
@@ -56,13 +90,13 @@ static void *setup_new_node(cu_arena *arena, void *buffer, size_t item_size)
 	
 }
 
-void cu_arena_new(cu_arena *arena, size_t block_size)
+void cu_arena_new(struct cu_arena *arena, size_t block_size)
 {
 	arena->first = NULL;
 	arena->default_block_size = block_size;
 }
 
-void *cu_arena_alloc(cu_arena *arena, size_t item_size)
+void *cu_arena_alloc(struct cu_arena *arena, size_t item_size)
 {
 	size_t alloc_size = cu_arena_alloc_size(arena, item_size);
 	void *buffer = NULL;
@@ -75,46 +109,9 @@ void *cu_arena_alloc(cu_arena *arena, size_t item_size)
 	return cu_arena_alloc_buf(arena, item_size, buffer);
 }
 
-void cu_arena_free(cu_arena *arena)
+void cu_arena_free(struct cu_arena *arena)
 {
 	for (void *freeable = cu_arena_free_buf(arena); freeable != NULL; freeable = cu_arena_free_buf(arena)) {
 		free(freeable);
 	}
-}
-
-size_t cu_arena_alloc_size(cu_arena *arena, size_t item_size)
-{
-	if (find_allocatable_elem(arena->first, item_size) != NULL) {
-		return 0;
-	}
-	if (item_size > arena->default_block_size) {
-		return item_size + sizeof(struct arena_elem); // item is too big, so it gets its own node
-	}
-	return arena->default_block_size + sizeof(struct arena_elem); // will have to make a new node
-}
-
-void *cu_arena_alloc_buf(cu_arena *arena, size_t item_size, void *buffer)
-{
-	if (arena->first == NULL) {
-		return setup_new_node(arena, buffer, item_size);
-	}
-
-	struct arena_elem *allocatable_node = find_allocatable_elem(arena->first, item_size);
-	if (allocatable_node == NULL) {
-
-		return setup_new_node(arena, buffer, item_size);
-	}
-
-	allocatable_node->amount_filled += item_size;
-	return (char *)allocatable_node + sizeof(struct arena_elem) + allocatable_node->amount_filled;
-}
-
-void *cu_arena_free_buf(cu_arena *arena)
-{
-	if (arena->first == NULL) {
-		return NULL;
-	}
-	void *freeable_ptr = arena->first;
-	arena->first = arena->first->next;
-	return freeable_ptr;
 }
