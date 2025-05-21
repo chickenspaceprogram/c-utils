@@ -113,12 +113,12 @@ static inline size_t cu_strchr(const struct cu_str *string, unsigned char charac
 size_t cu_strstr_cstr(const struct cu_str *string, const char *search_string);
 size_t cu_strstr_cu_str(const struct cu_str *string, const struct cu_str *search_string);
 
-static inline void cu_str_rev(struct cu_str *string)
+static inline void cu_strrev(struct cu_str *string)
 {
 	for (size_t i = 0; i < string->len / 2; ++i) {
 		char temp = string->string[i];
-		string->string[i] = string->string[string->len - i];
-		string->string[string->len - i] = temp;
+		string->string[i] = string->string[string->len - i - 1];
+		string->string[string->len - i - 1] = temp;
 	}
 }
 
