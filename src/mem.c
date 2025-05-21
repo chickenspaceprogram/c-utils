@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
+#include <stdint.h>
 #include <c-utils/mem.h>
 
 struct cu_arena_elem {
@@ -135,8 +136,11 @@ void *cu_arena_alloc(struct cu_arena *arena, size_t item_size)
 
 void cu_arena_free(struct cu_arena *arena)
 {
-	for (struct cu_arena_elem *el = arena->first; el != NULL; el = el->next) {
+	struct cu_arena_elem *el = arena->first;
+	while (el != NULL) {
+		struct cu_arena_elem *tmp = el->next;
 		cu_allocator_free(el, el->block_size + sizeof(struct cu_arena_elem), arena->allocator);
+		el = tmp;
 	}
 }
 

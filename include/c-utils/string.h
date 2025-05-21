@@ -4,130 +4,162 @@
 
 #pragma once
 #include <stddef.h>
+#include <stdbool.h>
+#include <string.h>
+#include <ctype.h>
 #include <c-utils/mem.h>
 
-typedef struct cu_str {
+struct cu_str {
 	char *string;
 	size_t len;
-} cu_str;
+};
 
-typedef struct cu_str_pair {
-	cu_str fst;
-	cu_str snd;
-} cu_str_pair;
+// Moves the C-string pointed to by `string` into a cu_str.
+// The cu_str does not take ownership of the c-string; for a version that takes ownership, try cu_str_clone.
+struct cu_str cu_str_new(char *string)
+{
+	return (struct cu_str) { .string = string, .len = strlen(string) };
+}
 
-// Allocates a new cu_str.
-//
-// If the allocation fails, cu_str.string will be equal to NULL.
-// Passing this string to any other functions is undefined behavior until it has been completely filled with data.
-cu_str cu_str_new_empty(cu_arena *allocator, size_t len);
+#define cu_str_clone(STR, ALLOC) _Generic ((STR),					\
+	const char *: _Generic ((ALLOC),						\
+		struct cu_arena: cu_str_clone_cstr_arena(STR, ALLOC),			\
+		const struct cu_allocator: cu_str_clone_cstr_alloc(STR, ALLOC)),	\
+	const struct cu_str *: _Generic ((ALLOC),					\
+		struct cu_arena: cu_str_clone_cu_str_arena(STR, ALLOC),			\
+		const struct cu_allocator: cu_str_clone_cu_str_alloc(STR, ALLOC))	\
+)
 
-// Copies the array of `char` pointed to by `string` into a `cu_str`.
-// The `cu_str` is allocated on the allocator `allocator`.
-//
-// If the allocation fails, cu_str.string will be equal to NULL.
-cu_str cu_str_new_copy(cu_arena *allocator, char *string, size_t len);
+struct cu_str cu_str_clone_cstr_arena(const char *string, struct cu_arena *arena);
+struct cu_str cu_str_clone_cstr_alloc(const char *string, const struct cu_allocator *alloc);
+struct cu_str cu_str_clone_cu_str_arena(const struct cu_str *string, struct cu_arena *arena);
+struct cu_str cu_str_clone_cu_str_alloc(const struct cu_str *string, const struct cu_allocator *alloc);
 
-// Moves the array of `char` pointed to by `string` into a `cu_str`.
-// This operation runs in O(1) time, so if you have a string which is guaranteed to be valid as long as the `cu_str` will be valid, consider moving it, rather than copying it.
-//
-// The array `string` must have a length of at least `len`.
-cu_str cu_str_new_move(char *string, size_t len);
+// Only valid to call if you have created the cu_str with the given allocator.
+static inline void cu_str_free(struct cu_str *string, const struct cu_allocator *alloc)
+{
+	cu_allocator_free(string->string, string->len, alloc);
+}
 
-// Copies the C-string pointed to by `cstring` into a `cu_str` allocated on the allocator `allocator`. 
-//
-// If the allocation fails, cu_str.string will be equal to NULL.
-//
-// The null character of `cstring` will be truncated and not included in the `cu_str`.
-// If you wish to retain this null character, consider using cu_str_new_copy instead.
-cu_str cu_str_new_copy_cstr(cu_arena *allocator, char *cstring);
+// Takes a non-owning view of a cu_str in O(1) time.
+// [start, end)
+static inline struct cu_str cu_str_view(struct cu_str *string, size_t start, size_t end)
+{
+	return (struct cu_str) { .string = string->string + start, .len = end - start };
+}
 
-// Moves the C-string pointed to by `cstring` into a cu_str.
-// This operation runs in O(1) time, so if you have a string which is guaranteed to be valid as long as the `cu_str` will be valid, consider moving it, rather than copying it.
-// `string` is not modified, however, it is not marked const so that non-const `cu_str`s can be returned.
-// 
-// Do note, however, that the null character of `cstring` will be truncated and not included in the `cu_str`.
-// If you wish to retain this null character, consider using cu_str_new_move instead.
-cu_str cu_str_new_move_cstr(char *cstring);
+static inline size_t cu_strlen(const struct cu_str *string)
+{
+	return string->len;
+}
 
-
-// Returns a copy of `string`, allocated on the allocator `allocator`.
-// As with all copies, this runs in O(n) time, so try to avoid copying unless absolutely necessary.
-//
-// If the allocation fails, cu_str.string will be equal to NULL.
-cu_str cu_str_copy(cu_arena *allocator, const cu_str *string);
-
-
-// Returns a view on `string`.
-//
-// A view is a shallow copy of a string; it does not hold ownership of it, and will be invalid once `string` is invalid.
-// This shallow copy can be performed in O(1) time, so when a deep copy is not needed it's recommended to just get a view.
-// Nevertheless, a view can be used for all the same functions that the regular string can, and its creation is guaranteed not to change any of the data in the string.
-// (The string is not marked const only so that non-const strings can be returned from the function.)
-//
-// The view will start at index `start`, and will not include the character at index `end`. Essentially you get the substring [start, end).
-//
-// This function doesn't validate its inputs! If you pass in a `start` or `end` that is greater than the string's length, it is undefined behavior, as it is if you pass in a `start` that is greater than the `end`.
-cu_str cu_str_view(cu_str *string, size_t start, size_t end);
 
 // Concatenates the strings in `strings`, and returns the concatenated result.
-//
-// The strings are each copied into the result string, which is allocated on the allocator `allocator`.
-// If the allocation fails, cu_str.string will be equal to NULL.
-cu_str cu_str_cat(cu_arena *allocator, const cu_str *strings, size_t num_strings);
+// If passing in a `const struct cu_allocator` or `const struct cu_arena`, the third argument will be used to allocate the returned string
+// if passing in a `void *`, the third parameter will be used as a buffer to store the returned string.
+// It is assumed that the buffer is sized correctly to hold the concatenated string. 
+// To see how much space the buffer will need, use cu_str_gather_size.
+
+#define cu_str_gather(STRS, NSTRS, STORAGE) 							\
+	_Generic ((STRS), const struct cu_str *: _Generic((NSTRS), size_t: _Generic((STORAGE),	\
+		const struct cu_allocator *: cu_str_gather_alloc(STRS, NSTRS, STORAGE),		\
+		struct cu_arena *: cu_str_gather_arena(STRS, NSTRS, STORAGE),			\
+		void *: cu_str_gather_buf(STRS, NSTRS, STORAGE)					\
+)))
+
+struct cu_str cu_str_gather_alloc(const struct cu_str *strings, size_t nstrings, const struct cu_allocator *alloc);
+struct cu_str cu_str_gather_arena(const struct cu_str *strings, size_t nstrings, struct cu_arena *arena);
+struct cu_str cu_str_gather_buf(const struct cu_str *strings, size_t nstrings, void *buf); // assumes buf has enough space :)
+
+size_t cu_str_gather_size(const struct cu_str *strings, size_t nstrings);
 
 // Compares `string1` and `string2`, starting from the first character.
 // If string1 < string2, a number less than 0 is returned.
 // If string1 == string2, 0 is returned.
 // If string1 > string2, a number greater than 0 is returned.
-int cu_str_cmp(const cu_str *string1, const cu_str *string2);
+static inline int cu_str_cmp(const struct cu_str *string1, const struct cu_str *string2)
+{
+	size_t len = (string1->len > string2->len) ? string2->len : string1->len;
+	return memcmp(string1->string, string2->string, len);
+}
 
 // Checks if the string is empty.
-int cu_str_isempty(const cu_str *string);
-
-// Breaks `string` up into tokens, delimited by any of the characters in `delims`.
-// The number of tokens is returned, and the tokens are stored in an array allocated with `allocator` and stored at `out`.
-// If the allocation fails, *out will be equal to NULL.
-// 
-// Each token does not contain the delimiter. However, as the tokens are each views of `string`, it is valid to access all but the last token one past their length to see the delimiter character.
-size_t cu_str_tok(cu_arena *allocator, cu_str *string, const cu_str *delims, cu_str **const out);
+static inline bool cu_str_empty(const struct cu_str *string)
+{
+	return (cu_strlen(string) == 0);
+}
 
 // Searches `string` for an instance of `character`.
 // If the character is found, its index will be returned.
 // If not, the length of `string` will be returned.
-size_t cu_str_getchr(const cu_str *string, char character);
+static inline size_t cu_strchr(const struct cu_str *string, unsigned char character)
+{
+	char *item = memchr(string->string, character, string->len);
+	if (item == NULL) {
+		return string->len;
+	}
+	return item - string->string;
+}
+
+
+#define cu_strstr(HAYSTACK, NEEDLE) _Generic((HAYSTACK), const struct cu_str: _Generic((NEEDLE),	\
+	const char *: cu_strstr_cstr(HAYSTACK, NEEDLE),							\
+	const struct cu_str *: cu_strstr_cu_str(HAYSTACK, NEEDLE)					\
+))
 
 // Searches `string` for the substring `search_string`.
 // If the substring is found, the index of the start of the substring will be returned.
 // If not, the length of `string` will be returned.
-size_t cu_str_getstr(cu_str *string, const cu_str *search_string);
+size_t cu_strstr_cstr(const struct cu_str *string, const char *search_string);
+size_t cu_strstr_cu_str(const struct cu_str *string, const struct cu_str *search_string);
 
-void cu_str_rev(cu_str *string);
-
-// makes a copy of `string` with every instance of `target` replaced by `replacement`
-cu_str cu_str_replace(cu_arena *allocator, cu_str *string, const cu_str *target, const cu_str *replacement);
-
+static inline void cu_str_rev(struct cu_str *string)
+{
+	for (size_t i = 0; i < string->len / 2; ++i) {
+		char temp = string->string[i];
+		string->string[i] = string->string[string->len - i];
+		string->string[string->len - i] = temp;
+	}
+}
 
 // these just apply the toupper/tolower functions in ctype.h to every character
-void cu_str_toupper(cu_str *string);
-void cu_str_tolower(cu_str *string);
-
-void cu_str_swapcase(cu_str *string);
+static inline void cu_str_toupper(struct cu_str *string)
+{
+	for (size_t i = 0; i < string->len; ++i) {
+		string->string[i] = toupper(string->string[i]);
+	}
+}
+static inline void cu_str_tolower(struct cu_str *string)
+{
+	for (size_t i = 0; i < string->len; ++i) {
+		string->string[i] = tolower(string->string[i]);
+	}
+}
 
 // see the manpage for ctype.h
 // the following just apply the appropriately-named function there to every character in the string; if every character is as desired, 1 is returned, otherwise, 0 is returned.
-int cu_str_isalnum(const cu_str *string);
-int cu_str_isalpha(const cu_str *string);
-int cu_str_iscntrl(const cu_str *string);
-int cu_str_isdigit(const cu_str *string);
-int cu_str_isgraph(const cu_str *string);
-int cu_str_islower(const cu_str *string);
-int cu_str_isprint(const cu_str *string);
-int cu_str_ispunct(const cu_str *string);
-int cu_str_isspace(const cu_str *string);
-int cu_str_isupper(const cu_str *string);
-int cu_str_isxdigit(const cu_str *string);
 
-int cu_str_isascii(const cu_str *string);
-int cu_str_isblank(const cu_str *string);
+#define CU_STR_MAKE_FN(NAME) static inline bool cu_str_##NAME(const struct cu_str *string)\
+{\
+	for (size_t i = 0; i < string->len; ++i) {\
+		if (!NAME(string->string[i]))\
+			return false;\
+	}\
+	return true;\
+}
 
+// all of format static inline bool cu_str_isalnum(const struct cu_str *string);
+CU_STR_MAKE_FN(isalnum)
+CU_STR_MAKE_FN(isalpha)
+CU_STR_MAKE_FN(iscntrl)
+CU_STR_MAKE_FN(isgraph)
+CU_STR_MAKE_FN(islower)
+CU_STR_MAKE_FN(isprint)
+CU_STR_MAKE_FN(ispunct)
+CU_STR_MAKE_FN(isspace)
+CU_STR_MAKE_FN(isupper)
+CU_STR_MAKE_FN(isxdigit)
+CU_STR_MAKE_FN(isascii)
+CU_STR_MAKE_FN(isblank)
+
+#undef CU_STR_MAKE_FN

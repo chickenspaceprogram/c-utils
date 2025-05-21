@@ -12,10 +12,10 @@ add_test(
     COMMAND $<TARGET_FILE:test-mem>
 )
 
-#add_executable(test-string test-string.c)
-#target_link_libraries(test-string PRIVATE c-utils)
+add_executable(test-string test-string.c)
+target_link_libraries(test-string PRIVATE c-utils)
 
-#add_test(
-#    NAME test-string
-#    COMMAND $<TARGET_FILE:test-string>
-#)
+add_test(
+    NAME test-string
+    COMMAND $<TARGET_FILE:test-string>
+)

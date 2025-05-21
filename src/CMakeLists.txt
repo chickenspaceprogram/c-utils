@@ -14,7 +14,7 @@ set(C_UTILS_INCLUDES
 add_library(c-utils 
 	${C_UTILS_INCLUDES}
 	mem.c
-#	string.c
+	string.c
 )
 
 target_include_directories(c-utils PUBLIC "${PROJECT_SOURCE_DIR}/include")
