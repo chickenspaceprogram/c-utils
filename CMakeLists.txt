@@ -12,11 +12,6 @@ project(
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_C_STANDARD 11)
-set(CMAKE_BUILD_TYPE Debug)
-set(C_UTILS_INCLUDES
-    "${PROJECT_SOURCE_DIR}/include/c-utils/mem.h"
-    "${PROJECT_SOURCE_DIR}/include/c-utils/string.h"
-)
 
 include(CTest)
 

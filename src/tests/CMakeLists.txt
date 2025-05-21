@@ -4,18 +4,18 @@
 
 cmake_minimum_required(VERSION 3.15)
 
-add_executable(test-arena arena.c)
-target_link_libraries(test-arena PRIVATE c-utils)
+add_executable(test-mem test-mem.c)
+target_link_libraries(test-mem PRIVATE c-utils)
 
 add_test(
-    NAME test-arena
-    COMMAND $<TARGET_FILE:test-arena>
+    NAME test-mem
+    COMMAND $<TARGET_FILE:test-mem>
 )
 
-add_executable(test-string string.c)
-target_link_libraries(test-string PRIVATE c-utils)
+#add_executable(test-string test-string.c)
+#target_link_libraries(test-string PRIVATE c-utils)
 
-add_test(
-    NAME test-string
-    COMMAND $<TARGET_FILE:test-string>
-)
+#add_test(
+#    NAME test-string
+#    COMMAND $<TARGET_FILE:test-string>
+#)

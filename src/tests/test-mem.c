@@ -4,12 +4,13 @@
 
 #include <assert.h>
 
-#include <c-utils/arena.h>
+#include <c-utils/mem.h>
+#include <stdlib.h>
 
 
-void test_malloc(void) {
-    cu_arena arena;
-    cu_arena_new(&arena, 2 * sizeof(int)); // yeah it's a small block size ik
+void test_malloc(struct cu_allocator *alloc) {
+    struct cu_arena arena;
+    cu_arena_new(&arena, 2 * sizeof(int), alloc); // yeah it's a small block size ik
     int *int1 = cu_arena_alloc(&arena, sizeof(int));
     *int1 = 12;
     int *int2 = cu_arena_alloc(&arena, sizeof(int));
@@ -37,6 +38,34 @@ void test_malloc(void) {
 
 }
 
+static void *dummy_malloc(size_t amt, void *ctx)
+{
+	return malloc(amt);
+}
+
+static void dummy_free(void *mem, size_t amt, void *ctx)
+{
+	free(mem);
+}
+
+static void *dummy_realloc(void *mem, size_t newsize, size_t oldsize, void *ctx)
+{
+	return realloc(mem, newsize);
+}
+
+struct cu_allocator test_alloc1 = {
+	.alloc = dummy_malloc,
+	.free = dummy_free,
+};
+
+struct cu_allocator test_alloc2 = {
+	.alloc = dummy_malloc,
+	.free = dummy_free,
+	.realloc = dummy_realloc,
+};
+
 int main(void) {
-    test_malloc();
+    test_malloc(NULL);
+    test_malloc(&test_alloc1);
+    test_malloc(&test_alloc2);
 }
