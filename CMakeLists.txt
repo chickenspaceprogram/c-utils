@@ -1,28 +1,12 @@
-
-# Copyright 2024, 2025 Athena Boose
-
-# This file is part of c-utils.
-
-# c-utils is free software: you can redistribute it and/or modify it under
-# the terms of the GNU General Public License as published by the Free
-# Software Foundation, either version 3 of the License, or (at your option)
-# any later version.
-
-# c-utils is distributed in the hope that it will be useful, but WITHOUT
-# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-# FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License
-# for more details.
-
-# You should have received a copy of the GNU General Public License
-# along with c-utils. If not, see <https://www.gnu.org/licenses/>. 
-
-# Copyright 2024, 2025 Athena Boose
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 cmake_minimum_required(VERSION 3.15)
 project(
     c-utils 
     VERSION 0.1
-    DESCRIPTION "The worst POSIX-compliant shell possible."
+    DESCRIPTION "A pile of C utility functions and datatypes."
     LANGUAGES C
 )
 
@@ -30,7 +14,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_BUILD_TYPE Debug)
 set(C_UTILS_INCLUDES
-    "${PROJECT_SOURCE_DIR}/include/c-utils/arena.h"
+    "${PROJECT_SOURCE_DIR}/include/c-utils/mem.h"
     "${PROJECT_SOURCE_DIR}/include/c-utils/string.h"
 )
 
