@@ -7,16 +7,16 @@
 #include <stddef.h>
 #include <cu/intmanip.h>
 
-// Creating any variable whose name starts with RUDP_VECTOR and ends with _INTERNAL_ is disallowed
+// Creating any variable whose name starts with CU_VECTOR and ends with _INTERNAL_ is disallowed
 
-#ifndef RUDP_VECTOR_INIT_SIZE
-#define RUDP_VECTOR_INIT_SIZE 8
+#ifndef CU_VECTOR_INIT_SIZE
+#define CU_VECTOR_INIT_SIZE 8
 #endif
 
 // Expands to the type of a cu_vector.
 // 
 // ELEMENTS_TYPE is the type of the vector elements. It should not be const-qualified.
-#define RUDP_VECTOR_TYPE(ELEMENTS_TYPE)\
+#define CU_VECTOR_TYPE(ELEMENTS_TYPE)\
 struct {\
 	ELEMENTS_TYPE *data;\
 	size_t nel;\
@@ -24,12 +24,12 @@ struct {\
 }
 
 // Creates a new cu_vector, given the name of a cu_vector struct.
-// VEC must be a cu_vector struct that has a type given by RUDP_VECTOR_TYPE() for some type.
+// VEC must be a cu_vector struct that has a type given by CU_VECTOR_TYPE() for some type.
 // ALLOCATOR_PTR is a pointer to a cu_allocator struct. It may be NULL.
 #define cu_vector_new(VEC, ALLOCATOR_PTR)\
-	((VEC).data = cu_allocator_allocarray((RUDP_VECTOR_INIT_SIZE), sizeof(*(VEC).data), (ALLOCATOR_PTR)),\
+	((VEC).data = cu_allocator_allocarray((CU_VECTOR_INIT_SIZE), sizeof(*(VEC).data), (ALLOCATOR_PTR)),\
 	(VEC).nel = 0,\
-	(VEC).bufsize = (RUDP_VECTOR_INIT_SIZE),\
+	(VEC).bufsize = (CU_VECTOR_INIT_SIZE),\
 	((VEC).data == NULL) ? -1 : 0)\
 
 // Deletes a cu_vector.
@@ -61,9 +61,9 @@ struct {\
 #define cu_vector_at(VEC, INDEX) (((VEC).data)[(INDEX)])
 
 #define cu_vector_swap_elem(VEC, INDEX1, INDEX2) do {\
-	typeof(*(VEC).data) RUDP_VECTOR_SWAP_ELEM_TEMP_INTERNAL_ = (VEC).data[(INDEX1)];\
+	typeof(*(VEC).data) CU_VECTOR_SWAP_ELEM_TEMP_INTERNAL_ = (VEC).data[(INDEX1)];\
 	(VEC).data[(INDEX1)] = (VEC).data[(INDEX2)];\
-	(VEC).data[(INDEX2)] = RUDP_VECTOR_SWAP_ELEM_TEMP_INTERNAL_;\
+	(VEC).data[(INDEX2)] = CU_VECTOR_SWAP_ELEM_TEMP_INTERNAL_;\
 } while (0)
 
 // Appends the value of the variable named by ELEM to the end of VEC.
@@ -96,17 +96,17 @@ _Generic((ELEM), typeof(*(VEC).data):\
 // Reserves space for exactly NEWSIZE elements in VEC.
 // If NEWSIZE < cu_vector_capacity(VEC), nothing happens.
 #define cu_vector_reserve_exact(VEC, NEWSIZE, ALLOC) ({\
-	int RUDP_VECTOR_RESERVE_EXACT_RETVAL_INTERNAL_ = 0;\
+	int CU_VECTOR_RESERVE_EXACT_RETVAL_INTERNAL_ = 0;\
 	if ((NEWSIZE) > (VEC).bufsize) {\
-		typeof((VEC).data) RUDP_VECTOR_RESERVE_EXACT_NEWPTR_INTERNAL = cu_allocator_reallocarray((VEC).data, (NEWSIZE), (VEC).bufsize, sizeof((*(VEC).data)), (ALLOC));\
-		if (RUDP_VECTOR_RESERVE_EXACT_NEWPTR_INTERNAL != NULL) {\
-			(VEC).data = RUDP_VECTOR_RESERVE_EXACT_NEWPTR_INTERNAL;\
+		typeof((VEC).data) CU_VECTOR_RESERVE_EXACT_NEWPTR_INTERNAL = cu_allocator_reallocarray((VEC).data, (NEWSIZE), (VEC).bufsize, sizeof((*(VEC).data)), (ALLOC));\
+		if (CU_VECTOR_RESERVE_EXACT_NEWPTR_INTERNAL != NULL) {\
+			(VEC).data = CU_VECTOR_RESERVE_EXACT_NEWPTR_INTERNAL;\
 			(VEC).bufsize = (NEWSIZE);\
 		}\
 		else {\
-			RUDP_VECTOR_RESERVE_EXACT_RETVAL_INTERNAL_ = -1;\
+			CU_VECTOR_RESERVE_EXACT_RETVAL_INTERNAL_ = -1;\
 		}\
 	}\
-	RUDP_VECTOR_RESERVE_EXACT_RETVAL_INTERNAL_;\
+	CU_VECTOR_RESERVE_EXACT_RETVAL_INTERNAL_;\
 })
 

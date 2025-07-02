@@ -5,11 +5,11 @@
 #include <stddef.h>
 #include <string.h>
 
-#ifndef RUDP_DEQUE_INITSIZE
-#define RUDP_DEQUE_INITSIZE 16
+#ifndef CU_DEQUE_INITSIZE
+#define CU_DEQUE_INITSIZE 16
 #endif
 
-#define RUDP_DEQUE_TYPE(TYPENAME)\
+#define CU_DEQUE_TYPE(TYPENAME)\
 struct {\
 	TYPENAME *array;\
 	size_t arrsize;\
@@ -18,9 +18,9 @@ struct {\
 }
 
 #define cu_deque_new(DEQUE, ALLOC)\
-	((DEQUE).array = cu_allocator_allocarray((RUDP_DEQUE_INITSIZE), sizeof(*((DEQUE).array)), (ALLOC)),\
+	((DEQUE).array = cu_allocator_allocarray((CU_DEQUE_INITSIZE), sizeof(*((DEQUE).array)), (ALLOC)),\
 	(((DEQUE).array == NULL) ? -1 : (\
-	(DEQUE).arrsize = (RUDP_DEQUE_INITSIZE),\
+	(DEQUE).arrsize = (CU_DEQUE_INITSIZE),\
 	(DEQUE).firstel = 0,\
 	(DEQUE).nel = 0,\
 	0)))
@@ -33,22 +33,22 @@ struct {\
 #define cu_deque_capacity(DEQUE) ((DEQUE).arrsize)
 
 #define cu_deque_reserve(DEQUE, AMOUNT, ALLOC) ({\
-	int RUDP_DEQUE_RESERVE_RETVAL_INTERNAL_ = 0;\
+	int CU_DEQUE_RESERVE_RETVAL_INTERNAL_ = 0;\
 	if ((AMOUNT) > (DEQUE).arrsize) {\
-		typeof((DEQUE).array) RUDP_DEQUE_RESERVE_NEWARR_INTERNAL_ = cu_allocator_allocarray(cu_next_pwr_2(AMOUNT), sizeof(*((DEQUE).array)), (ALLOC));\
-		if (RUDP_DEQUE_RESERVE_NEWARR_INTERNAL_ == NULL) {\
-			RUDP_DEQUE_RESERVE_RETVAL_INTERNAL_ = -1;\
+		typeof((DEQUE).array) CU_DEQUE_RESERVE_NEWARR_INTERNAL_ = cu_allocator_allocarray(cu_next_pwr_2(AMOUNT), sizeof(*((DEQUE).array)), (ALLOC));\
+		if (CU_DEQUE_RESERVE_NEWARR_INTERNAL_ == NULL) {\
+			CU_DEQUE_RESERVE_RETVAL_INTERNAL_ = -1;\
 		}\
 		else {\
-			memcpy(RUDP_DEQUE_RESERVE_NEWARR_INTERNAL_, (DEQUE).array + (DEQUE).firstel, ((DEQUE).arrsize - (DEQUE).firstel) * sizeof(*((DEQUE).array)));\
-			memcpy(RUDP_DEQUE_RESERVE_NEWARR_INTERNAL_ + (DEQUE).arrsize - (DEQUE).firstel, (DEQUE).array, (DEQUE).firstel * sizeof(*((DEQUE).array)));\
+			memcpy(CU_DEQUE_RESERVE_NEWARR_INTERNAL_, (DEQUE).array + (DEQUE).firstel, ((DEQUE).arrsize - (DEQUE).firstel) * sizeof(*((DEQUE).array)));\
+			memcpy(CU_DEQUE_RESERVE_NEWARR_INTERNAL_ + (DEQUE).arrsize - (DEQUE).firstel, (DEQUE).array, (DEQUE).firstel * sizeof(*((DEQUE).array)));\
 			cu_allocator_freearray((DEQUE).array, (DEQUE).arrsize, sizeof(*((DEQUE).array)), (ALLOC));\
-			(DEQUE).array = RUDP_DEQUE_RESERVE_NEWARR_INTERNAL_;\
+			(DEQUE).array = CU_DEQUE_RESERVE_NEWARR_INTERNAL_;\
 			(DEQUE).firstel = 0;\
 			(DEQUE).arrsize = cu_next_pwr_2(AMOUNT);\
 		}\
 	}\
-	RUDP_DEQUE_RESERVE_RETVAL_INTERNAL_;\
+	CU_DEQUE_RESERVE_RETVAL_INTERNAL_;\
 })
 
 #define cu_deque_push_back(DEQUE, ELEM, ALLOC)\

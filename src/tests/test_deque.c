@@ -1,11 +1,11 @@
-#define RUDP_DEQUE_INITSIZE 4 // allows for testing resize
+#define CU_DEQUE_INITSIZE 4 // allows for testing resize
 #include <cu/deque.h>
 #include <assert.h>
 
 
 int main(void)
 {
-	RUDP_DEQUE_TYPE(int) deque;
+	CU_DEQUE_TYPE(int) deque;
 	assert(cu_deque_new(deque, dummy_test_alloc) == 0);
 	assert(cu_deque_capacity(deque) == 4);
 	assert(cu_deque_push_back(deque, 11, dummy_test_alloc) == 0);

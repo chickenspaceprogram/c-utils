@@ -4,7 +4,7 @@
 int main(void)
 {
 	int nums[] = {1, 11, 111, 1111, 11111, 111111, 23, 45, 67, 89, 10, 11, 12, 13};
-	RUDP_VECTOR_TYPE(int) vec;
+	CU_VECTOR_TYPE(int) vec;
 	cu_vector_new(vec, dummy_test_alloc);
 	for (int i = 0; i < 14; ++i) {
 		assert(cu_vector_push(vec, nums[i], dummy_test_alloc) == 0);

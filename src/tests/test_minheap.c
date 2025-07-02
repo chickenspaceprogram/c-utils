@@ -8,7 +8,7 @@ static inline int intcmp(int n1, int n2)
 
 int main(void)
 {
-	RUDP_MINHEAP_TYPE(int) intheap;
+	CU_MINHEAP_TYPE(int) intheap;
 	cu_minheap_new(intheap, dummy_test_alloc);
 	assert(cu_minheap_empty(intheap));
 	assert(cu_minheap_size(intheap) == 0);

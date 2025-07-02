@@ -73,7 +73,7 @@ int main(void)
 		16,
 	};
 
-	RUDP_HASHMAP_TYPE(const char *, int) hm;
+	CU_HASHMAP_TYPE(const char *, int) hm;
 	assert(cu_hashmap_new(hm, dummy_test_alloc) == 0);
 	for (int i = 0; i < 16; ++i) {
 		assert(cu_hashmap_at(hm, keys[i], hash_str, cmp_str) == NULL);
@@ -93,8 +93,8 @@ int main(void)
 	cu_hashmap_remove(hm, "key15", hash_str, cmp_str);
 	bool foundflags[16] = {0};
 	bool targetflags[16] = {false, true, true, false, true, true, true, true, true, false, true, false, true, true, false, true};
-	RUDP_HASHMAP_BUCKETTYPE(hm) *bucket = NULL;
-	RUDP_HASHMAP_ITERTYPE(hm) iter;
+	CU_HASHMAP_BUCKETTYPE(hm) *bucket = NULL;
+	CU_HASHMAP_ITERTYPE(hm) iter;
 	cu_hashmap_new_iter(iter, hm);
 	do {
 		bucket = cu_hashmap_iter_next(iter);

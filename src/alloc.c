@@ -65,7 +65,7 @@ void *cu_allocator_reallocarray(void *mem, size_t new_nel, size_t old_nel, size_
 	return cu_allocator_realloc(mem, new_nel * elem_size, old_nel * elem_size, alloc);
 }
 
-static RUDP_HASHMAP_TYPE(void *, size_t) dummy_map;
+static CU_HASHMAP_TYPE(void *, size_t) dummy_map;
 bool dummy_map_init = false;
 
 union voidptrunion {
