@@ -6,11 +6,11 @@
 #include <string.h>
 #include <stdbool.h>
 #include <stdint.h>
-#include <rudp/utils/alloc.h>
-#include <rudp/utils/hashmap.h>
+#include <cu/alloc.h>
+#include <cu/hashmap.h>
 #include <assert.h>
 
-void *rudp_allocator_alloc(size_t memsize, struct rudp_allocator *alloc)
+void *cu_allocator_alloc(size_t memsize, struct cu_allocator *alloc)
 {
 	if (alloc == NULL)
 		return malloc(memsize);
@@ -18,7 +18,7 @@ void *rudp_allocator_alloc(size_t memsize, struct rudp_allocator *alloc)
 	return alloc->alloc(memsize, alloc->ctx);
 }
 
-void rudp_allocator_free(void *mem, size_t memsize, struct rudp_allocator *alloc)
+void cu_allocator_free(void *mem, size_t memsize, struct cu_allocator *alloc)
 {
 	if (alloc == NULL) {
 		free(mem);
@@ -30,7 +30,7 @@ void rudp_allocator_free(void *mem, size_t memsize, struct rudp_allocator *alloc
 }
 
 
-void *rudp_allocator_realloc(void *mem, size_t newsize, size_t oldsize, struct rudp_allocator *alloc)
+void *cu_allocator_realloc(void *mem, size_t newsize, size_t oldsize, struct cu_allocator *alloc)
 {
 	if (alloc == NULL)
 		return realloc(mem, newsize);
@@ -41,7 +41,7 @@ void *rudp_allocator_realloc(void *mem, size_t newsize, size_t oldsize, struct r
 			return NULL;
 		}
 		memcpy(newbuf, mem, oldsize);
-		rudp_allocator_free(mem, oldsize, alloc);
+		cu_allocator_free(mem, oldsize, alloc);
 		return newbuf;
 	}
 	return alloc->realloc(mem, newsize, oldsize, alloc->ctx);
@@ -57,12 +57,12 @@ static bool check_mult_overflow(size_t n1, size_t n2)
 	return false;
 }
 
-void *rudp_allocator_reallocarray(void *mem, size_t new_nel, size_t old_nel, size_t elem_size, struct rudp_allocator *alloc)
+void *cu_allocator_reallocarray(void *mem, size_t new_nel, size_t old_nel, size_t elem_size, struct cu_allocator *alloc)
 {
 	if (check_mult_overflow(new_nel, elem_size)) {
 		return NULL;
 	}
-	return rudp_allocator_realloc(mem, new_nel * elem_size, old_nel * elem_size, alloc);
+	return cu_allocator_realloc(mem, new_nel * elem_size, old_nel * elem_size, alloc);
 }
 
 static RUDP_HASHMAP_TYPE(void *, size_t) dummy_map;
@@ -114,35 +114,35 @@ static inline int ptrcmp(void *p1, void *p2)
 
 static inline void freedummyhashmap(void)
 {
-	rudp_hashmap_delete(dummy_map, NULL);
+	cu_hashmap_delete(dummy_map, NULL);
 }
 
 static inline void *dummy_test_allocfn(size_t amount, void *ctx)
 {
 	if (!dummy_map_init) {
-		rudp_hashmap_new(dummy_map, NULL);
+		cu_hashmap_new(dummy_map, NULL);
 		dummy_map_init = true;
 		atexit(freedummyhashmap);
 	}
 	void *newptr = malloc(amount);
 	if (newptr == NULL)
 		return NULL;
-	assert(rudp_hashmap_insert(dummy_map, newptr, amount, NULL, ptrhash, ptrcmp) == 0);
+	assert(cu_hashmap_insert(dummy_map, newptr, amount, NULL, ptrhash, ptrcmp) == 0);
 	return newptr;
 }
 static inline void dummy_test_free(void *mem, size_t amount, void *ctx)
 {
-	size_t *ptr = rudp_hashmap_at(dummy_map, mem, ptrhash, ptrcmp);
+	size_t *ptr = cu_hashmap_at(dummy_map, mem, ptrhash, ptrcmp);
 	assert(ptr != NULL);
 	assert(*ptr == amount);
 	free(mem);
 }
 
-static struct rudp_allocator dummy_test_alloc_val = {
+static struct cu_allocator dummy_test_alloc_val = {
 	.alloc = dummy_test_allocfn,
 	.free = dummy_test_free,
 	.realloc = NULL,
 	.ctx = NULL,
 };
 
-struct rudp_allocator *dummy_test_alloc = &dummy_test_alloc_val;
+struct cu_allocator *dummy_test_alloc = &dummy_test_alloc_val;

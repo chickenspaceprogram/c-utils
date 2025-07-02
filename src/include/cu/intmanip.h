@@ -20,7 +20,7 @@ static inline size_t logbase2(size_t num)
 	return counter;
 }
 
-static inline size_t rudp_next_pwr_2(size_t num)
+static inline size_t cu_next_pwr_2(size_t num)
 {
 	if (sizeof(size_t) != 1 << logbase2(sizeof(size_t))) {
 		fputs("Fatal error: The sizeof(size_t) on your computer is not a power of 2.\n", stderr);
