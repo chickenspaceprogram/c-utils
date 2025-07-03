@@ -22,11 +22,11 @@ jobs:
         c_compiler: [gcc, clang]
         cpp_compiler: [g++, clang++]
 
-        include:
+        exclude:
           - c_compiler: gcc
-            cpp_compiler: g++
-          - c_compiler: clang
             cpp_compiler: clang++
+          - c_compiler: clang
+            cpp_compiler: g++
 
     steps:
     - uses: actions/checkout@v4
