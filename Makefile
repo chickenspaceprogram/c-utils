@@ -6,8 +6,9 @@
 
 .PHONY: rel dbg asan wipe clean make test memcheck
 
-DEBUG=-DCMAKE_BUILD_TYPE=Debug
-RELEASE=-DCMAKE_BUILD_TYPE=Release
+DEBUG=-DCMAKE_BUILD_TYPE=Debug -DC_UTILS_DEBUG=ON
+RELWITHDEBINFO=-DCMAKE_BUILD_TYPE=RelWithDebInfo -DC_UTILS_DEBUG=ON
+RELEASE=-DCMAKE_BUILD_TYPE=Release -DC_UTILS_DEBUG
 STATIC_TOOLS=-DC_UTILS_CLANG_TIDY=ON -DC_UTILS_CPPCHECK=ON
 TESTS=-DC_UTILS_TESTS=ON
 ASAN=-DC_UTILS_USE_ASAN=ON
@@ -30,6 +31,12 @@ rel: wipe
 dbg: wipe
 	: 'dbg'
 	cmake -B $(BUILD_DIR) $(DEBUG) $(TESTS) $(STATIC_TOOLS)
+	touch $(SENTINEL)
+	cmake --build $(BUILD_DIR) $(THREADS)
+
+reldbg: wipe
+	: 'rel with debug info'
+	cmake -B $(BUILD_DIR) $(RELWITHDEBINFO) $(TESTS) $(STATIC_TOOLS)
 	touch $(SENTINEL)
 	cmake --build $(BUILD_DIR) $(THREADS)
 
