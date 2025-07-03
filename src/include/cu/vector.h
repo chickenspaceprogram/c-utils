@@ -3,8 +3,9 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
-#include <cu/alloc.h>
 #include <stddef.h>
+#include <string.h>
+#include <cu/alloc.h>
 #include <cu/intmanip.h>
 
 // Creating any variable whose name starts with CU_VECTOR and ends with _INTERNAL_ is disallowed
@@ -60,6 +61,9 @@ struct {\
 // INDEX must be an integer type, and it must be greater than 0 and less than cu_vector_capacity(VEC)
 #define cu_vector_at(VEC, INDEX) (((VEC).data)[(INDEX)])
 
+// Gets a pointer to the raw data array
+#define cu_vector_data(VEC) ((VEC).data)
+
 #define cu_vector_swap_elem(VEC, INDEX1, INDEX2) do {\
 	typeof(*(VEC).data) CU_VECTOR_SWAP_ELEM_TEMP_INTERNAL_ = (VEC).data[(INDEX1)];\
 	(VEC).data[(INDEX1)] = (VEC).data[(INDEX2)];\
@@ -77,10 +81,30 @@ _Generic((ELEM), typeof(*(VEC).data):\
 	) : -1)\
 )
 
+// Pushes all the elements at ELEMPTR onto the vector.
+#define cu_vector_pushall(VEC, ELEMPTR, NEL, ALLOC)\
+_Generic((ELEMPTR), typeof((VEC).data):\
+	((cu_vector_reserve((VEC), (VEC).nel + (NEL), (ALLOC)) == 0) ? (\
+		(memcpy((VEC).data + (VEC).nel, (ELEMPTR), (NEL) * sizeof(*((VEC).data)))),\
+		((VEC).nel += (NEL)),0\
+	) : (-1))\
+)
+
+
 // Pops the last element from VEC.
 // This function is safe in that popping from an empty vector does nothing.
+//
+// Evaluates to the number of elements left in the vector.
 #define cu_vector_pop(VEC)\
-	(VEC).nel = ((VEC).nel == 0 ? 0 : (VEC).nel - 1);\
+	(((VEC).nel == 0) ? (0) : (--(VEC).nel))\
+
+// Pops the last NEL elements from VEC.
+// This function is safe; if NEL is greater than the number of elements in the
+// vector, the number of elements in the vector will be set to 0.
+//
+// Evaluates to the number of elements left in the vector.
+#define cu_vector_popall(VEC, NEL)\
+	((VEC).nel < (NEL) ? ((VEC).nel = 0) : ((VEC).nel -= (NEL)))
 
 // Reserves space for at least NEWSIZE elements in VEC.
 // VEC must be the name of a cu_vector previously initialized by cu_vector_new.

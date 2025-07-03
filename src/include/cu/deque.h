@@ -55,11 +55,40 @@ struct {\
 	((cu_deque_reserve(DEQUE, (DEQUE).nel + 1, ALLOC) == 0) ?\
 	(++((DEQUE).nel), cu_deque_at(DEQUE, (DEQUE).nel - 1) = (ELEM),0)\
 	: (-1))
-#define cu_deque_pop_back(DEQUE) do {\
-	--((DEQUE).nel);\
-} while (0)
+
+#define cu_deque_pushall_back(DEQUE, ELEMPTR, NEL, ALLOC)\
+_Generic((ELEMPTR), typeof((DEQUE).array):\
+((cu_deque_reserve(DEQUE, (DEQUE).nel + (NEL), ALLOC) == 0) ? (\
+	(((DEQUE).nel + (DEQUE).firstel) & ((DEQUE).arrsize - 1)) + (NEL) > (DEQUE).arrsize ? (\
+		memcpy(\
+			&cu_deque_at((DEQUE), (DEQUE).nel),\
+			(ELEMPTR), (/* number of elements till end*/\
+				((DEQUE).arrsize - \
+				((DEQUE).nel + ((DEQUE).firstel) & ((DEQUE).arrsize - 1)))\
+			) * sizeof(*((DEQUE).array))),\
+		memcpy((DEQUE).array, (ELEMPTR) + (/* number of elements till end*/\
+			((DEQUE).arrsize - \
+			((DEQUE).nel + ((DEQUE).firstel) & ((DEQUE).arrsize - 1)))\
+		), ((NEL) - (/* number of elements till end*/\
+			((DEQUE).arrsize - \
+			((DEQUE).nel + ((DEQUE).firstel) & ((DEQUE).arrsize - 1)))\
+		)) * sizeof(*((DEQUE).array))),\
+		\
+		(DEQUE).nel += (NEL),0\
+	) : (\
+		memcpy(&cu_deque_at((DEQUE), (DEQUE).nel), (ELEMPTR), (NEL) * sizeof(*((DEQUE).array))),\
+		(DEQUE).nel += (NEL),0\
+	)\
+) : (-1)))
+
+#define cu_deque_pop_back(DEQUE)\
+	((DEQUE).nel == 0 ? ((DEQUE).firstel = 0) : (--(DEQUE).nel))
+
+#define cu_deque_popall_back(DEQUE, NEL)\
+	((DEQUE).nel < (NEL) ? ((DEQUE).nel = 0,(DEQUE).firstel = 0,0) : ((DEQUE).nel -= (NEL)))
+
 #define cu_deque_push_front(DEQUE, ELEM, ALLOC)\
-	((cu_deque_reserve(DEQUE, (DEQUE).nel + 1, ALLOC) == 0) ?\
+	((cu_deque_reserve((DEQUE), (DEQUE).nel + 1, (ALLOC)) == 0) ?\
 	(\
 		(((DEQUE).firstel == 0) ? ((DEQUE).firstel = (DEQUE).arrsize - 1) : (--(DEQUE).firstel)),\
 		((DEQUE).array[(DEQUE).firstel] = (ELEM)),\
@@ -67,10 +96,42 @@ struct {\
 	)\
 	: (-1))
 
-#define cu_deque_pop_front(DEQUE) do {\
-	(DEQUE).firstel = ((DEQUE).firstel + 1) & ((DEQUE).arrsize - 1);\
-	--((DEQUE).nel);\
-} while (0)
+#define cu_deque_pushall_front(DEQUE, ELEMPTR, NEL, ALLOC)\
+_Generic((ELEMPTR), typeof((DEQUE).array):\
+	((cu_deque_reserve((DEQUE), (DEQUE).nel + (NEL), (ALLOC)) == 0) ? (\
+		(DEQUE).firstel == 0 ? (\
+			memcpy((DEQUE).array + (DEQUE).arrsize - (NEL), (ELEMPTR), (NEL) * sizeof(*((DEQUE).array)))\
+		) : (\
+			((DEQUE).firstel > (NEL) ? (\
+				memcpy((DEQUE).array + (DEQUE).firstel - (NEL), (ELEMPTR), (NEL) * sizeof(*((DEQUE).array)))\
+			) : (\
+				memcpy((DEQUE).array + (DEQUE).arrsize - (NEL) + (DEQUE).firstel, (ELEMPTR), ((NEL) - (DEQUE).firstel) * sizeof(*((DEQUE).array))),\
+				memcpy((DEQUE).array, (ELEMPTR) + (NEL) - (DEQUE).firstel, (DEQUE).firstel * sizeof(*((DEQUE).array)))\
+			))\
+		),\
+		((DEQUE).nel += (NEL)),\
+		(DEQUE).firstel = ((DEQUE).firstel + (DEQUE).arrsize - (NEL)) & ((DEQUE).arrsize - 1),0\
+		) : (-1)\
+	)\
+)
+
+
+#define cu_deque_pop_front(DEQUE)\
+(((DEQUE).nel == 0) ? (\
+	(DEQUE).firstel = 0\
+) : (\
+	(DEQUE).firstel = ((DEQUE).firstel + 1) & ((DEQUE).arrsize - 1),\
+	(--((DEQUE).nel))\
+))
+
+#define cu_deque_popall_front(DEQUE, NEL)\
+(((DEQUE).nel < (NEL)) ? (\
+	(DEQUE).nel = 0,\
+	(DEQUE).firstel = 0\
+) : (\
+	(DEQUE).firstel = ((DEQUE).firstel + (NEL)) & ((DEQUE).arrsize - 1),\
+	(DEQUE).nel -= (NEL)\
+))
 
 #define cu_deque_delete(DEQUE, ALLOC) do {\
 	cu_allocator_freearray((DEQUE).array, (DEQUE).arrsize, sizeof(*((DEQUE).array)), (ALLOC));\

@@ -3,7 +3,7 @@
 #include <assert.h>
 
 
-int main(void)
+static void test_deque_individual(void)
 {
 	CU_DEQUE_TYPE(int) deque;
 	assert(cu_deque_new(deque, dummy_test_alloc) == 0);
@@ -31,9 +31,9 @@ int main(void)
 	assert(cu_deque_size(deque) == 6);
 	assert(cu_deque_capacity(deque) == 8);
 
-	cu_deque_pop_back(deque);
-	cu_deque_pop_back(deque);
-	cu_deque_pop_front(deque);
+	assert(cu_deque_pop_back(deque) == 5);
+	assert(cu_deque_pop_back(deque) == 4);
+	assert(cu_deque_pop_front(deque) == 3);
 
 	assert(cu_deque_at(deque, 0) == 456);
 	assert(cu_deque_at(deque, 1) == 123);
@@ -45,4 +45,52 @@ int main(void)
 
 
 	cu_deque_delete(deque, dummy_test_alloc);
+}
+
+void test_deque_multiple(void)
+{
+	CU_DEQUE_TYPE(int) deque;
+	assert(cu_deque_new(deque, dummy_test_alloc) == 0);
+	int headels[6] = {11, 22, 33, 44, 55, 66};
+	int tailels[3] = {123, 456, 789};
+	cu_deque_pushall_front(deque, headels, 6, dummy_test_alloc);
+	assert(cu_deque_size(deque) == 6);
+	assert(cu_deque_pushall_back(deque, tailels, 3, dummy_test_alloc) == 0);
+	assert(cu_deque_size(deque) == 9);
+	for (size_t i = 0; i < 6; ++i) {
+		assert(cu_deque_at(deque, i) == headels[i]);
+	}
+	for (size_t i = 6; i < 9; ++i) {
+		assert(cu_deque_at(deque, i) == tailels[i - 6]);
+	}
+	assert(cu_deque_pushall_front(deque, tailels, 3, dummy_test_alloc) == 0);
+	assert(cu_deque_size(deque) == 12);
+	for (size_t i = 0; i < 3; ++i) {
+		assert(cu_deque_at(deque, i) == tailels[i]);
+	}
+	assert(cu_deque_pushall_back(deque, headels, 6, dummy_test_alloc) == 0);
+	assert(cu_deque_size(deque) == 18);
+	for (size_t i = 12; i < 18; ++i) {
+		assert(cu_deque_at(deque, i) == headels[i - 12]);
+	}
+	assert(cu_deque_popall_back(deque, 12) == 6);
+	assert(cu_deque_size(deque) == 6);
+	for (size_t i = 0; i < 3; ++i) {
+		assert(cu_deque_at(deque, i) == tailels[i]);
+	}
+	for (size_t i = 3; i < 6; ++i) {
+		assert(cu_deque_at(deque, i) == headels[i - 3]);
+	}
+	assert(cu_deque_popall_front(deque, 3) == 3);
+	assert(cu_deque_size(deque) == 3);
+	for (size_t i = 0; i < 3; ++i) {
+		assert(cu_deque_at(deque, i) == headels[i]);
+	}
+
+}
+
+int main(void) 
+{
+	test_deque_individual();
+	test_deque_multiple();
 }

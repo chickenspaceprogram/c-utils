@@ -1,7 +1,7 @@
 #include <cu/vector.h>
 #include <assert.h>
 
-int main(void)
+void single_push_pop_tests(void)
 {
 	int nums[] = {1, 11, 111, 1111, 11111, 111111, 23, 45, 67, 89, 10, 11, 12, 13};
 	CU_VECTOR_TYPE(int) vec;
@@ -21,7 +21,7 @@ int main(void)
 		assert(cu_vector_at(vec, i) == i);
 	}
 	for (int i = 0; i < 7; ++i) {
-		cu_vector_pop(vec);
+		assert(cu_vector_pop(vec) == 14 - i - 1);
 	}
 	assert(cu_vector_size(vec) == 7);
 	assert(cu_vector_capacity(vec) == 16);
@@ -29,4 +29,26 @@ int main(void)
 	assert(cu_vector_size(vec) == 0);
 	assert(cu_vector_capacity(vec) == 16);
 	cu_vector_delete(vec, dummy_test_alloc);
+}
+
+void multi_push_pop_tests(void)
+{
+	int nums[] = {1, 11, 111, 1111, 11111, 111111, 23, 45, 67, 89, 10, 11, 12, 13};
+	CU_VECTOR_TYPE(int) vec;
+	cu_vector_new(vec, dummy_test_alloc);
+	assert(cu_vector_pushall(vec, nums, 14, dummy_test_alloc) == 0);
+	assert(cu_vector_size(vec) == 14);
+	assert(cu_vector_capacity(vec) == 16);
+	for (size_t i = 0; i < 14; ++i) {
+		assert(cu_vector_at(vec, i) == nums[i]);
+	}
+	assert(cu_vector_popall(vec, 4) == 10);
+	assert(cu_vector_size(vec) == 10);
+	assert(cu_vector_popall(vec, 123) == 0);
+	cu_vector_delete(vec, dummy_test_alloc);
+}
+
+int main(void) {
+	single_push_pop_tests();
+	multi_push_pop_tests();
 }
