@@ -92,6 +92,7 @@ void test_deque_multiple(void)
 	for (size_t i = 0; i < 3; ++i) {
 		assert(cu_deque_at(deque, i) == headels[i]);
 	}
+	cu_deque_delete(deque, dummy_test_alloc);
 
 }
 
