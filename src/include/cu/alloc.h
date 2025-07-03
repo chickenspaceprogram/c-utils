@@ -21,8 +21,8 @@ struct cu_allocator {
 	void *ctx; // passed into all functions
 };
 
-extern struct cu_allocator *dummy_test_alloc; // used to test that mem sizes are passed to realloc and free properly
-// this is only safe to use in a single-threaded context!
+struct cu_allocator cu_get_dummy_test_alloc(void); // used to test that mem sizes are passed to realloc and free properly
+void cu_free_dummy_test_alloc(struct cu_allocator *alloc);
 
 // generic functions, these default to libc functions when alloc == NULL
 

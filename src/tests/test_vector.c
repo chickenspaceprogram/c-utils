@@ -7,7 +7,7 @@
 #include <cu/vector.h>
 #include <assert.h>
 
-void single_push_pop_tests(void)
+static void single_push_pop_tests(struct cu_allocator *dummy_test_alloc)
 {
 	int nums[] = {1, 11, 111, 1111, 11111, 111111, 23, 45, 67, 89, 10, 11, 12, 13};
 	CU_VECTOR_TYPE(int) vec;
@@ -37,7 +37,7 @@ void single_push_pop_tests(void)
 	cu_vector_delete(vec, dummy_test_alloc);
 }
 
-void multi_push_pop_tests(void)
+static void multi_push_pop_tests(struct cu_allocator *dummy_test_alloc)
 {
 	int nums[] = {1, 11, 111, 1111, 11111, 111111, 23, 45, 67, 89, 10, 11, 12, 13};
 	CU_VECTOR_TYPE(int) vec;
@@ -55,6 +55,8 @@ void multi_push_pop_tests(void)
 }
 
 int main(void) {
-	single_push_pop_tests();
-	multi_push_pop_tests();
+	struct cu_allocator alloc = cu_get_dummy_test_alloc();
+	single_push_pop_tests(&alloc);
+	multi_push_pop_tests(&alloc);
+	cu_free_dummy_test_alloc(&alloc);
 }

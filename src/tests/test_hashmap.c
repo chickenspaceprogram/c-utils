@@ -8,13 +8,13 @@
 #include <stdint.h>
 #include <assert.h>
 
-int cmp_str(const char *s1, const char *s2)
+static int cmp_str(const char *s1, const char *s2)
 {
 	return strcmp(s1, s2);
 }
 
 
-size_t hash_str(const char *cstr)
+static size_t hash_str(const char *cstr)
 {
 	if (sizeof(size_t) == 8) {
 		const uint64_t offset_basis = 0xcbf29ce484222325;
@@ -40,7 +40,7 @@ size_t hash_str(const char *cstr)
 	return 0;
 }
 
-int main(void)
+static void test_hashmap(struct cu_allocator *dummy_test_alloc)
 {
 	const char *keys[] = {
 		"key1",
@@ -114,4 +114,11 @@ int main(void)
 		assert(foundflags[i] == targetflags[i]);
 	}
 	cu_hashmap_delete(hm, dummy_test_alloc);
+}
+
+int main(void)
+{
+	struct cu_allocator alloc = cu_get_dummy_test_alloc();
+	test_hashmap(&alloc);
+	cu_free_dummy_test_alloc(&alloc);
 }

@@ -9,7 +9,7 @@
 #include <assert.h>
 
 
-static void test_deque_individual(void)
+static void test_deque_individual(struct cu_allocator *dummy_test_alloc)
 {
 	CU_DEQUE_TYPE(int) deque;
 	assert(cu_deque_new(deque, dummy_test_alloc) == 0);
@@ -53,7 +53,7 @@ static void test_deque_individual(void)
 	cu_deque_delete(deque, dummy_test_alloc);
 }
 
-void test_deque_multiple(void)
+void test_deque_multiple(struct cu_allocator *dummy_test_alloc)
 {
 	CU_DEQUE_TYPE(int) deque;
 	assert(cu_deque_new(deque, dummy_test_alloc) == 0);
@@ -98,6 +98,8 @@ void test_deque_multiple(void)
 
 int main(void) 
 {
-	test_deque_individual();
-	test_deque_multiple();
+	struct cu_allocator alloc = cu_get_dummy_test_alloc();
+	test_deque_individual(&alloc);
+	test_deque_multiple(&alloc);
+	cu_free_dummy_test_alloc(&alloc);
 }

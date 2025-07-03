@@ -12,7 +12,7 @@ static inline int intcmp(int n1, int n2)
 	return n1 - n2;
 }
 
-int main(void)
+static void test_minheap(struct cu_allocator *dummy_test_alloc)
 {
 	CU_MINHEAP_TYPE(int) intheap;
 	cu_minheap_new(intheap, dummy_test_alloc);
@@ -38,4 +38,11 @@ int main(void)
 	assert(cu_minheap_empty(intheap));
 
 	cu_minheap_delete(intheap, dummy_test_alloc);
+}
+
+int main(void)
+{
+	struct cu_allocator alloc = cu_get_dummy_test_alloc();
+	test_minheap(&alloc);
+	cu_free_dummy_test_alloc(&alloc);
 }

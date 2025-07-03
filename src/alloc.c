@@ -67,12 +67,13 @@ void *cu_allocator_reallocarray(void *mem, size_t new_nel, size_t old_nel, size_
 	return cu_allocator_realloc(mem, new_nel * elem_size, old_nel * elem_size, alloc);
 }
 
-static CU_HASHMAP_TYPE(void *, size_t) dummy_map;
-bool dummy_map_init = false;
-
 union voidptrunion {
 	void *ptr;
 	char bytes[sizeof(void *)];
+};
+
+struct hmap {
+	CU_HASHMAP_TYPE(void *, size_t) map;
 };
 
 static inline size_t ptrhash(void *ptr)
@@ -103,7 +104,7 @@ static inline size_t ptrhash(void *ptr)
 	}
 }
 
-static inline int ptrcmp(void *p1, void *p2)
+static inline int ptrcmp(const void *p1, const void *p2)
 {
 	if (p1 > p2) {
 		return 1;
@@ -114,37 +115,40 @@ static inline int ptrcmp(void *p1, void *p2)
 	return 0;
 }
 
-static inline void freedummyhashmap(void)
-{
-	cu_hashmap_delete(dummy_map, NULL);
-}
-
 static inline void *dummy_test_allocfn(size_t amount, void *ctx)
 {
-	if (!dummy_map_init) {
-		cu_hashmap_new(dummy_map, NULL);
-		dummy_map_init = true;
-		atexit(freedummyhashmap);
-	}
 	void *newptr = malloc(amount);
 	if (newptr == NULL)
 		return NULL;
-	assert(cu_hashmap_insert(dummy_map, newptr, amount, NULL, ptrhash, ptrcmp) == 0);
+	struct hmap *map = ctx;
+	assert(cu_hashmap_insert(map->map, newptr, amount, NULL, ptrhash, ptrcmp) == 0);
 	return newptr;
 }
 static inline void dummy_test_free(void *mem, size_t amount, void *ctx)
 {
-	size_t *ptr = cu_hashmap_at(dummy_map, mem, ptrhash, ptrcmp);
+	struct hmap *map = ctx;
+	size_t *ptr = cu_hashmap_at(map->map, mem, ptrhash, ptrcmp);
 	assert(ptr != NULL);
 	assert(*ptr == amount);
 	free(mem);
 }
 
-static struct cu_allocator dummy_test_alloc_val = {
-	.alloc = dummy_test_allocfn,
-	.free = dummy_test_free,
-	.realloc = NULL,
-	.ctx = NULL,
-};
+struct cu_allocator cu_get_dummy_test_alloc(void)
+{
+	struct hmap *map = malloc(sizeof(struct hmap));
 
-struct cu_allocator *dummy_test_alloc = &dummy_test_alloc_val;
+	assert(map != NULL && "Failed to allocate dummy test alloc hashmap");
+	assert(cu_hashmap_new(map->map, NULL) == 0 && "Failed to initialize dummy test alloc hashmap");
+	struct cu_allocator dummy = {
+		.alloc = dummy_test_allocfn,
+		.free = dummy_test_free,
+		.realloc = NULL,
+		.ctx = map,
+	};
+	return dummy;
+}
+void cu_free_dummy_test_alloc(struct cu_allocator *alloc)
+{
+	cu_hashmap_delete(*(CU_HASHMAP_TYPE(void *, size_t) *)alloc->ctx, NULL);
+	free(alloc->ctx);
+}
