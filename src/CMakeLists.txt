@@ -6,7 +6,7 @@
 
 cmake_minimum_required(VERSION 3.21)
 
-add_library(c_utils
+add_library(CUtils
 	alloc.c
 	include/cu/hashmap.h
 	include/cu/intmanip.h
@@ -18,7 +18,7 @@ add_library(c_utils
 	include/cu/deque.h
 )
 
-target_include_directories(c_utils PUBLIC include)
-target_compile_features(c_utils PUBLIC c_std_23) # headers use typeof()
+target_include_directories(CUtils PUBLIC include)
+target_compile_features(CUtils PUBLIC c_std_23) # headers use typeof()
 
 add_subdirectory(tests)

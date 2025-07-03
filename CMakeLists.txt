@@ -5,7 +5,7 @@
 # SPDX-License-Identifier: MPL-2.0
 
 cmake_minimum_required(VERSION 3.21)
-project(c-utils C)
+project(CUtils C)
 
 # this file does kinda suck but it also does work and i can't be bothered to make it decent
 

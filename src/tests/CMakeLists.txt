@@ -6,7 +6,7 @@
 
 cmake_minimum_required(VERSION 3.14)
 
-make_test(test_vector.c PUBLIC c_utils)
-make_test(test_hashmap.c PUBLIC c_utils)
-make_test(test_minheap.c PUBLIC c_utils)
-make_test(test_deque.c PUBLIC c_utils)
+make_test(test_vector.c PUBLIC CUtils)
+make_test(test_hashmap.c PUBLIC CUtils)
+make_test(test_minheap.c PUBLIC CUtils)
+make_test(test_deque.c PUBLIC CUtils)
