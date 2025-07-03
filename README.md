@@ -22,9 +22,6 @@ by MSVC.
 Statement-expressions are the only way to have "nice" C generics, so they're
 unavoidable in my opinion.
 
-alloc.h and arena.h should be valid on all platforms, though; maybe all you
-care about are generic allocators.
-
 ## Documentation
 
 The header files have been commented a bit; the code is macro-hell and kinda

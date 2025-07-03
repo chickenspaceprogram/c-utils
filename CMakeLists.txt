@@ -4,10 +4,8 @@
 
 # SPDX-License-Identifier: MPL-2.0
 
-cmake_minimum_required(VERSION 3.14)
+cmake_minimum_required(VERSION 3.21)
 project(c-utils C)
-
-set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # this file does kinda suck but it also does work and i can't be bothered to make it decent
 

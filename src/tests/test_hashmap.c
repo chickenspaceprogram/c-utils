@@ -17,6 +17,7 @@ static int cmp_str(const char *s1, const char *s2)
 
 static size_t hash_str(const char *cstr)
 {
+	static_assert(sizeof(size_t) == 4 || sizeof(size_t) == 8, "sizeof(size_t) on your platform is neither 4 nor 8, you must disable hashmap tests.");
 	if (sizeof(size_t) == 8) {
 		const uint64_t offset_basis = 0xcbf29ce484222325;
 		const uint64_t fnv_prime = 0x00000100000001b3;

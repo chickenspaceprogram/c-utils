@@ -53,6 +53,7 @@ struct cu_allocator {
 
 // Allocates `memsize` bytes of memory on the heap using `alloc`, and returns
 // a pointer to it.
+[[nodiscard("Discarding allocated pointer")]]
 void *cu_allocator_alloc(size_t memsize, struct cu_allocator *alloc);
 
 // Frees the heap-allocated memory at `mem` with the allocator `alloc`. 
@@ -64,12 +65,14 @@ void cu_allocator_free(void *mem, size_t memsize, struct cu_allocator *alloc);
 // (if alloc->realloc != NULL), or this function just 
 // allocates a new block of memory, memcpy's data over,
 // and frees the old one.
+[[nodiscard("Discarding allocated pointer")]]
 void *cu_allocator_realloc(void *mem, size_t newsize, size_t oldsize, struct cu_allocator *alloc);
 
 // Allocates a new array of `nel` elements, each `elem_size` in size, using
 // the allocator `alloc`.
 //
 // This function is provided because it's convenient.
+[[nodiscard("Discarding allocated pointer")]]
 inline static void *cu_allocator_allocarray(size_t nel, size_t elemsize, struct cu_allocator *alloc)
 {
 	return cu_allocator_alloc(nel * elemsize, alloc);
@@ -86,12 +89,14 @@ inline static void cu_allocator_freearray(void *mem, size_t nel, size_t elemsize
 //
 // This checks for integer overflow, similar to Linux's reallocarray(),
 // and fails in that case.
+[[nodiscard("Discarding allocated pointer")]]
 void *cu_allocator_reallocarray(void *mem, size_t new_nel, size_t old_nel, size_t elem_size, struct cu_allocator *alloc);
 
 // Attempts to call cu_allocator_realloc() on its arguments.
 // If cu_allocator_realloc() fails, the pointer gets freed automatically.
 //
 // This function is present in FreeBSD and it's convenient sometimes.
+[[nodiscard("Discarding allocated pointer")]]
 inline static void *cu_allocator_reallocf(void *mem, size_t newsize, size_t oldsize, struct cu_allocator *alloc)
 {
 	void *result = cu_allocator_realloc(mem, newsize, oldsize, alloc);
@@ -101,7 +106,6 @@ inline static void *cu_allocator_reallocf(void *mem, size_t newsize, size_t olds
 	}
 	return result;
 }
-
 
 // Creates a dummy allocator.
 //
@@ -118,6 +122,7 @@ inline static void *cu_allocator_reallocf(void *mem, size_t newsize, size_t olds
 // However, different dummy allocators do not interfere with each other;
 // so, if you want to run multiple threads, call this function multiple times
 // and pass each dummy allocator you get to a different thread.
+[[nodiscard("Discarding allocated dummy allocator")]]
 struct cu_allocator cu_get_dummy_test_alloc(void);
 
 // Frees any memory associated with a dummy test allocator.

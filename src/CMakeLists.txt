@@ -4,7 +4,7 @@
 
 # SPDX-License-Identifier: MPL-2.0
 
-cmake_minimum_required(VERSION 3.14)
+cmake_minimum_required(VERSION 3.21)
 
 add_library(c_utils
 	alloc.c
@@ -19,5 +19,6 @@ add_library(c_utils
 )
 
 target_include_directories(c_utils PUBLIC include)
+target_compile_features(c_utils PUBLIC c_std_23) # headers use typeof()
 
 add_subdirectory(tests)

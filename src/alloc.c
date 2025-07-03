@@ -79,6 +79,7 @@ struct hmap {
 
 static inline size_t ptrhash(void *ptr)
 {
+	static_assert(1, "sizeof(size_t) on your platform is neither 4 nor 8.");
 	union voidptrunion un = {.ptr = ptr};
 	if (sizeof(size_t) == 8) {
 		const uint64_t offset_basis = 0xcbf29ce484222325;
@@ -100,9 +101,7 @@ static inline size_t ptrhash(void *ptr)
 		}
 		return hash;
 	}
-	else {
-		abort();
-	}
+	abort();
 }
 
 static inline int ptrcmp(const void *p1, const void *p2)
