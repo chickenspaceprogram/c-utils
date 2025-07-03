@@ -5,6 +5,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 #include <cu/minheap.h>
+#undef NDEBUG
 #include <assert.h>
 
 static inline int intcmp(int n1, int n2)

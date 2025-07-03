@@ -6,6 +6,7 @@
 
 #define CU_DEQUE_INITSIZE 4 // allows for testing resize
 #include <cu/deque.h>
+#undef NDEBUG
 #include <assert.h>
 
 

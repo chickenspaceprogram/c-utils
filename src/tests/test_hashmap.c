@@ -6,6 +6,7 @@
 
 #include <cu/hashmap.h>
 #include <stdint.h>
+#undef NDEBUG
 #include <assert.h>
 
 static int cmp_str(const char *s1, const char *s2)

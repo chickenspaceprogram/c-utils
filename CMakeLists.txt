@@ -31,7 +31,6 @@ endif()
 if (C_UTILS_DEBUG)
 	message(NOTICE "Option `C_UTILS_DEBUG` specified. Building for debug and adding extra compile flags.")
 	set(CMAKE_CXX_FLAGS "-Wall -Wextra -Wpedantic -Werror")
-	set(CMAKE_BUILD_TYPE Debug)
 endif()
 
 if (C_UTILS_CPPCHECK)

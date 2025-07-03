@@ -5,6 +5,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 #include <cu/vector.h>
+#undef NDEBUG
 #include <assert.h>
 
 static void single_push_pop_tests(struct cu_allocator *dummy_test_alloc)

@@ -10,6 +10,7 @@
 #include <stdint.h>
 #include <cu/alloc.h>
 #include <cu/hashmap.h>
+#undef NDEBUG
 #include <assert.h>
 
 void *cu_allocator_alloc(size_t memsize, struct cu_allocator *alloc)
@@ -121,7 +122,8 @@ static inline void *dummy_test_allocfn(size_t amount, void *ctx)
 	if (newptr == NULL)
 		return NULL;
 	struct hmap *map = ctx;
-	assert(cu_hashmap_insert(map->map, newptr, amount, NULL, ptrhash, ptrcmp) == 0);
+	int retval = cu_hashmap_insert(map->map, newptr, amount, NULL, ptrhash, ptrcmp);
+	assert(retval == 0);
 	return newptr;
 }
 static inline void dummy_test_free(void *mem, size_t amount, void *ctx)
@@ -138,7 +140,8 @@ struct cu_allocator cu_get_dummy_test_alloc(void)
 	struct hmap *map = malloc(sizeof(struct hmap));
 
 	assert(map != NULL && "Failed to allocate dummy test alloc hashmap");
-	assert(cu_hashmap_new(map->map, NULL) == 0 && "Failed to initialize dummy test alloc hashmap");
+	int retval = cu_hashmap_new(map->map, NULL);
+	assert(retval == 0 && "Failed to initialize dummy test alloc hashmap");
 	struct cu_allocator dummy = {
 		.alloc = dummy_test_allocfn,
 		.free = dummy_test_free,
