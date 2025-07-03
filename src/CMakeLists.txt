@@ -12,6 +12,7 @@ add_library(c_utils
 	include/cu/alloc.h
 	include/cu/minheap.h
 	include/cu/rc.h
+	include/cu/arc.h
 	include/cu/deque.h
 )
 
