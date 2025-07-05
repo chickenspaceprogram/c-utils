@@ -1,5 +1,54 @@
 #include <cu/sync.h>
+#define MAX_EINTR_COUNT 128
 
+#ifdef CUTILS_HAVE_PTHREADS
+#include <errno.h>
+#include <assert.h>
+int cu_sem_try_wait(cu_sem *sem)
+{
+	int retval = 0;
+	int eintr_ct = MAX_EINTR_COUNT;
+	do {
+		retval = sem_trywait(sem);
+		if (retval == 0)
+			return thrd_success;
+		else if (retval == EAGAIN)
+			return thrd_busy;
+	} while (retval == EINTR && eintr_ct-- > 0);
+	return thrd_error;
+}
+int cu_sem_timedwait(cu_sem *sem, const struct timespec *restrict time)
+{
+	int retval = 0;
+	int eintr_ct = MAX_EINTR_COUNT;
+	do {
+		retval = sem_timedwait(sem, time);
+		if (retval == 0)
+			return thrd_success;
+		else if (retval == ETIMEDOUT)
+			return thrd_busy;
+	} while (retval == EINTR && eintr_ct-- > 0);
+	return thrd_error;
+}
+int cu_sem_wait(cu_sem *sem)
+{
+	int retval = 0;
+	int eintr_ct = MAX_EINTR_COUNT;
+	do {
+		retval = sem_wait(sem);
+		if (retval == 0)
+			return thrd_success;
+	} while (retval == EINTR && eintr_ct-- > 0);
+	return thrd_error;
+}
+
+
+void cu_sem_destroy(cu_sem *sem)
+{
+	int res = sem_destroy(sem);
+	assert(res == 0);
+}
+#else
 int cu_sem_post(cu_sem *sem)
 {
 	int retval = mtx_lock(&(sem->mutex));
@@ -65,3 +114,4 @@ int cu_sem_timedwait(cu_sem *sem, const struct timespec *restrict time)
 		return res;
 	return thrd_success;
 }
+#endif

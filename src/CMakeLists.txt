@@ -31,12 +31,30 @@ check_include_file(stdatomic.h HAVE_STDATOMIC_H)
 check_symbol_exists("__STDC_NO_THREADS__" "threads.h" NO_C11_THREADS)
 check_symbol_exists("__STDC_NO_ATOMICS__" "stdatomic.h" NO_C11_ATOMICS)
 
-if(NO_C11_THREADS OR NOT HAVE_THREADS_H)
-	message(SEND_ERROR "Your C library lacks C11 threads.")
+find_package(Threads)
+if (Threads_FOUND AND CMAKE_USE_PTHREADS_INIT)
+	set(CUTILS_HAVE_PTHREADS ON)
+	target_link_libraries(CUtils PUBLIC Threads::Threads)
+endif()
+
+if(HAVE_THREADS_H AND NOT NO_C11_THREADS)
+	set(CUTILS_HAVE_C11_THREADS ON)
+endif()
+
+if(NOT CUTILS_HAVE_C11_THREADS AND NOT CUTILS_HAVE_PTHREADS)
+	message(SEND_ERROR "c-utils requires either C11 or POSIX threads; your system has neither")
+endif()
+
+if(CUTILS_HAVE_C11_THREADS)
+	target_compile_definitions(CUtils PUBLIC CUTILS_HAVE_C11_THREADS)
+endif()
+
+if(CUTILS_HAVE_PTHREADS)
+	target_compile_definitions(CUtils PUBLIC CUTILS_HAVE_PTHREADS)
 endif()
 
 if(NO_C11_ATOMICS OR NOT HAVE_STDATOMIC_H)
-	message(SEND_ERROR "Your C library lacks C11 atomics.")
+	message(SEND_ERROR "c-utils requires C11 atomics, which your system lacks")
 endif()
 
 target_include_directories(CUtils PUBLIC include)
