@@ -24,8 +24,9 @@ add_library(CUtils
 )
 
 include(CheckSymbolExists)
-check_symbol_exists("__STDC_NO_THREADS__", "threads.h", NO_C11_THREADS)
-check_symbol_exists("__STDC_NO_ATOMICS__", "stdatomic.h", NO_C11_ATOMICS)
+
+check_symbol_exists("__STDC_NO_THREADS__" "threads.h" NO_C11_THREADS)
+check_symbol_exists("__STDC_NO_ATOMICS__" "stdatomic.h" NO_C11_ATOMICS)
 
 if(NO_C11_THREADS)
 	message(SEND_ERROR "Your C library lacks C11 threads.")
