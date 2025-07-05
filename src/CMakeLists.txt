@@ -23,19 +23,19 @@ add_library(CUtils
 	include/cu/vector.h
 )
 
-find_package(Threads)
-if (Threads_FOUND)
-	if (CMAKE_USE_PTHREADS_INIT)
-		add_compile_definitions(USE_PTHREAD)
-	elseif(CMAKE_USE_WIN32_INIT)
-		add_compile_definitions(USE_WIN32)
-	else()
-		message(FATAL_ERROR "CUtils requires a suitable threading library; CMake failed to find one.")
-	endif()
+include(CheckSymbolExists)
+check_symbol_exists("__STDC_NO_THREADS__", "threads.h", NO_C11_THREADS)
+check_symbol_exists("__STDC_NO_ATOMICS__", "stdatomic.h", NO_C11_ATOMICS)
+
+if(NO_C11_THREADS)
+	message(SEND_ERROR "Your C library lacks C11 threads.")
+endif()
+
+if(NO_C11_ATOMICS)
+	message(SEND_ERROR "Your C library lacks C11 atomics.")
 endif()
 
 target_include_directories(CUtils PUBLIC include)
 target_compile_features(CUtils PUBLIC c_std_23) # headers use typeof()
-target_link_libraries(CUtils PUBLIC Threads::Threads)
 
 add_subdirectory(tests)
