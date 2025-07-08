@@ -5,6 +5,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 #include <cu/minheap.h>
+#include <cu/allocators.h>
 #undef NDEBUG
 #include <assert.h>
 

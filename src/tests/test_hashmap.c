@@ -5,6 +5,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 #include <cu/hashmap.h>
+#include <cu/allocators.h>
 #include <stdint.h>
 #undef NDEBUG
 #include <assert.h>
