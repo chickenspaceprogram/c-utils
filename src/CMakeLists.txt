@@ -24,6 +24,7 @@ include(CheckSymbolExists)
 check_symbol_exists("memset_explicit" "string.h" HAVE_MEMSET_EXPLICIT)
 check_symbol_exists("explicit_bzero" "string.h" HAVE_EXPLICIT_BZERO)
 check_symbol_exists("SecureZeroMemory" "Windows.h" HAVE_SECURE_ZERO_MEMORY)
+check_symbol_exists("memset_s" "string.h" HAVE_MEMSET_S)
 
 if(HAVE_MEMSET_EXPLICIT)
 	target_compile_definitions(CUtils PRIVATE CU_HAVE_MEMSET_EXPLICIT)
@@ -36,6 +37,11 @@ endif()
 if(HAVE_SECURE_ZERO_MEMORY)
 	target_compile_definitions(CUtils PRIVATE CU_HAVE_SECURE_ZERO_MEMORY)
 endif()
+
+if(HAVE_MEMSET_S)
+	target_compile_definitions(CUtils PRIVATE CU_HAVE_MEMSET_S)
+endif()
+
 
 target_include_directories(CUtils PUBLIC include)
 target_compile_features(CUtils PUBLIC c_std_23) # headers use typeof()

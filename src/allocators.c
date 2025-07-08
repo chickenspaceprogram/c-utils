@@ -13,8 +13,10 @@
 #elif defined(CU_HAVE_SECURE_ZERO_MEMORY)
 #	include <Windows.h>
 #	define CU_ZEROSET (void)SecureZeroMemory
+#elif defined(CU_HAVE_MEMSET_S)
+#	define CU_ZEROSET(PTR, LEN) (void)memset_s(PTR, LEN, 0, LEN)
 #else
-#	error "Need either bzero_explicit or memset_explicit for zeroing memory allocator"
+#	error "Need one of bzero_explicit, memset_explicit, memset_s, SecureZeroMemory for zeroing memory allocator"
 #endif
 
 #undef NDEBUG
