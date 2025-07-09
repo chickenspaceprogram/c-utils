@@ -83,21 +83,15 @@ void tss_delete(tss_t tss_id);
 #error "c-utils requires either C11 threads or pthreads to compile"
 #endif
 
-typedef struct cu_sem_internal cu_sem;
-
 // presume c11 threading stuff is defined
 
-struct cu_sem_internal {
+typedef struct {
 	cnd_t cond;
 	mtx_t mutex;
 	unsigned int counter; // unsigned int to correspond with POSIX semaphores, in case using those is more efficient
-};
+} cu_sem;
 
-static inline int cu_sem_init(cu_sem *sem, unsigned int init_value)
-{
-	sem->counter = init_value;
-	return cnd_init(&(sem->cond));
-}
+int cu_sem_init(cu_sem *sem, unsigned int init_value);
 int cu_sem_post(cu_sem *sem);
 int cu_sem_try_wait(cu_sem *sem);
 int cu_sem_timedwait(cu_sem *sem, const struct timespec *restrict time);

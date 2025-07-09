@@ -6,7 +6,11 @@
 
 #include <pthread.h>
 #include <time.h>
+#include <errno.h>
 static_assert(sizeof(intptr_t) >= sizeof(int), "intptr_t should be bigger than int");
+
+#define STR(PARAM) #PARAM
+#define TOSTRING(PARAM) STR(PARAM)
 
 struct cbinfo {
 	thrd_start_t func;
@@ -35,19 +39,22 @@ int thrd_create(thrd_t *thr, thrd_start_t func, void *arg)
 		.arg = arg,
 	};
 	int retval = cu_sem_init(&(info.blocker), 0);
-	if (retval != 0)
-		return thrd_error;
+	if (retval != thrd_success) {
+		return retval;
+	}
 
 	retval = pthread_create(thr, NULL, pthread_dummy_cb, &info);
-	if (retval != 0)
+	if (retval != 0) {
 		return thrd_error;
+	}
 	retval = cu_sem_wait(&(info.blocker));
-	if (retval != thrd_success)
+	if (retval != thrd_success) {
 		return retval;
+	}
 	
 	cu_sem_destroy(&(info.blocker));
 
-	return thrd_error;
+	return thrd_success;
 }
 
 int thrd_equal(thrd_t lhs, thrd_t rhs)
@@ -88,7 +95,8 @@ int thrd_join(thrd_t thr, int *res)
 	if (pthread_join(thr, &retval) != 0)
 		return thrd_error;
 	intptr_t intretval = (intptr_t)retval;
-	return intretval;
+	*res = intretval;
+	return thrd_success;
 }
 
 typedef pthread_mutex_t mtx_t;
@@ -158,7 +166,7 @@ void mtx_destroy(mtx_t *mutex)
 void call_once(once_flag *flag, void (*func)(void))
 {
 	int retval = pthread_once(flag, func);
-	assert(retval != 0);
+	assert(retval == 0);
 }
 
 int cnd_init(cnd_t *cond)
@@ -197,7 +205,7 @@ int cnd_timedwait(
 void cnd_destroy(cnd_t *cond)
 {
 	int retval = pthread_cond_destroy(cond);
-	assert(retval != 0);
+	assert(retval == 0);
 }
 
 int tss_create(tss_t *tss_key, tss_dtor_t destructor)
@@ -219,11 +227,23 @@ int tss_set(tss_t tss_id, void *val)
 void tss_delete(tss_t tss_id)
 {
 	int retval = pthread_key_delete(tss_id);
-	assert(retval != 0);
+	assert(retval == 0);
 }
 
 
 #endif
+
+int cu_sem_init(cu_sem *sem, unsigned int init_value)
+{
+	sem->counter = init_value;
+	int retval = cnd_init(&(sem->cond));
+	if (retval != thrd_success)
+		return retval;
+	retval = mtx_init(&(sem->mutex), mtx_plain);
+	if (retval != thrd_success)
+		return retval;
+	return cnd_init(&(sem->cond));
+}
 
 int cu_sem_post(cu_sem *sem)
 {
@@ -278,7 +298,7 @@ int cu_sem_timedwait(cu_sem *sem, const struct timespec *restrict time)
 			res = cnd_wait(&(sem->cond), &(sem->mutex));
 		else
 			res = cnd_timedwait(&(sem->cond), &(sem->mutex), time);
-
+		
 		if (res != thrd_success) {
 			mtx_unlock(&(sem->mutex));
 			return res;
