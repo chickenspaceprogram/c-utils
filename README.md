@@ -44,4 +44,4 @@ Please report any bugs you encounter!
     - Vector/Arraylist
     - Deque
     - Min-heap
-    - C11 threads (wrapper for pthreads)
+- C11 threads (wrapper for pthreads)
