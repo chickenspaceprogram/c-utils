@@ -10,8 +10,6 @@
 #include <stdint.h>
 #include <cu/alloc.h>
 #include <cu/hashmap.h>
-#undef NDEBUG
-#include <assert.h>
 
 void *cu_allocator_alloc(size_t memsize, struct cu_allocator *alloc)
 {
@@ -50,6 +48,15 @@ void *cu_allocator_realloc(void *mem, size_t newsize, size_t oldsize, struct cu_
 	return alloc->realloc(mem, newsize, oldsize, alloc->ctx);
 }
 
+int cu_allocator_try_realloc(void **mem, size_t newsize, size_t oldsize, struct cu_allocator *alloc)
+{
+	void *newptr = cu_allocator_realloc(*mem, newsize, oldsize, alloc);
+	if (newptr == NULL)
+		return -1;
+	*mem = newptr;
+	return 0;
+}
+
 static bool check_mult_overflow(size_t n1, size_t n2)
 {
 	// should in theory work
@@ -68,89 +75,11 @@ void *cu_allocator_reallocarray(void *mem, size_t new_nel, size_t old_nel, size_
 	return cu_allocator_realloc(mem, new_nel * elem_size, old_nel * elem_size, alloc);
 }
 
-union voidptrunion {
-	void *ptr;
-	char bytes[sizeof(void *)];
-};
-
-struct hmap {
-	CU_HASHMAP_TYPE(void *, size_t) map;
-};
-
-static inline size_t ptrhash(void *ptr)
+int cu_allocator_try_reallocarray(void **mem, size_t new_nel, size_t old_nel, size_t elem_size, struct cu_allocator *alloc)
 {
-	static_assert(1, "sizeof(size_t) on your platform is neither 4 nor 8.");
-	union voidptrunion un = {.ptr = ptr};
-	if (sizeof(size_t) == 8) {
-		const uint64_t offset_basis = 0xcbf29ce484222325;
-		const uint64_t fnv_prime = 0x00000100000001b3;
-		uint64_t hash = offset_basis;
-		for (size_t i = 0; i < sizeof(void *); ++i) {
-			hash ^= un.bytes[i];
-			hash *= fnv_prime;
-		}
-		return hash;
-	}
-	else if (sizeof(size_t) == 4) {
-		const uint32_t offset_basis = 0x811c9dc5;
-		const uint32_t fnv_prime = 0x01000193;
-		uint32_t hash = offset_basis;
-		for (size_t i = 0; i < sizeof(void *); ++i) {
-			hash ^= un.bytes[i];
-			hash *= fnv_prime;
-		}
-		return hash;
-	}
-	abort();
-}
-
-static inline int ptrcmp(const void *p1, const void *p2)
-{
-	if (p1 > p2) {
-		return 1;
-	}
-	else if (p1 < p2) {
-		return -1;
-	}
-	return 0;
-}
-
-static inline void *dummy_test_allocfn(size_t amount, void *ctx)
-{
-	void *newptr = malloc(amount);
+	void *newptr = cu_allocator_reallocarray(*mem, new_nel, old_nel, elem_size, alloc);
 	if (newptr == NULL)
-		return NULL;
-	struct hmap *map = ctx;
-	int retval = cu_hashmap_insert(map->map, newptr, amount, NULL, ptrhash, ptrcmp);
-	assert(retval == 0);
-	return newptr;
-}
-static inline void dummy_test_free(void *mem, size_t amount, void *ctx)
-{
-	struct hmap *map = ctx;
-	size_t *ptr = cu_hashmap_at(map->map, mem, ptrhash, ptrcmp);
-	assert(ptr != NULL);
-	assert(*ptr == amount);
-	free(mem);
-}
-
-struct cu_allocator cu_get_dummy_test_alloc(void)
-{
-	struct hmap *map = malloc(sizeof(struct hmap));
-
-	assert(map != NULL && "Failed to allocate dummy test alloc hashmap");
-	int retval = cu_hashmap_new(map->map, NULL);
-	assert(retval == 0 && "Failed to initialize dummy test alloc hashmap");
-	struct cu_allocator dummy = {
-		.alloc = dummy_test_allocfn,
-		.free = dummy_test_free,
-		.realloc = NULL,
-		.ctx = map,
-	};
-	return dummy;
-}
-void cu_free_dummy_test_alloc(struct cu_allocator *alloc)
-{
-	cu_hashmap_delete(*(CU_HASHMAP_TYPE(void *, size_t) *)alloc->ctx, NULL);
-	free(alloc->ctx);
+		return -1;
+	*mem = newptr;
+	return 0;
 }

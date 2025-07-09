@@ -8,11 +8,11 @@ cmake_minimum_required(VERSION 3.21)
 
 add_library(CUtils
 	alloc.c
-	arena.c
+	allocators.c
 	sync.c
 	include/cu/alloc.h
+	include/cu/allocators.h
 	include/cu/arc.h
-	include/cu/arena.h
 	include/cu/deque.h
 	include/cu/hashmap.h
 	include/cu/intmanip.h
@@ -24,6 +24,27 @@ add_library(CUtils
 )
 
 include(CheckSymbolExists)
+check_symbol_exists("memset_explicit" "string.h" HAVE_MEMSET_EXPLICIT)
+check_symbol_exists("explicit_bzero" "string.h" HAVE_EXPLICIT_BZERO)
+check_symbol_exists("SecureZeroMemory" "Windows.h" HAVE_SECURE_ZERO_MEMORY)
+check_symbol_exists("memset_s" "string.h" HAVE_MEMSET_S)
+
+if(HAVE_MEMSET_EXPLICIT)
+	target_compile_definitions(CUtils PRIVATE CU_HAVE_MEMSET_EXPLICIT)
+endif()
+
+if(HAVE_EXPLICIT_BZERO)
+	target_compile_definitions(CUtils PRIVATE CU_HAVE_EXPLICIT_BZERO)
+endif()
+
+if(HAVE_SECURE_ZERO_MEMORY)
+	target_compile_definitions(CUtils PRIVATE CU_HAVE_SECURE_ZERO_MEMORY)
+endif()
+
+if(HAVE_MEMSET_S)
+	target_compile_definitions(CUtils PRIVATE CU_HAVE_MEMSET_S)
+endif()
+
 include(CheckIncludeFile)
 check_include_file(threads.h HAVE_THREADS_H)
 check_include_file(stdatomic.h HAVE_STDATOMIC_H)

@@ -68,6 +68,14 @@ void cu_allocator_free(void *mem, size_t memsize, struct cu_allocator *alloc);
 [[nodiscard("Discarding allocated pointer")]]
 void *cu_allocator_realloc(void *mem, size_t newsize, size_t oldsize, struct cu_allocator *alloc);
 
+// Sets *mem to the newly-allocated pointer if allocation succeeds, does
+// nothing when allocation fails.
+//
+// On success, returns 0.
+// On failure, returns -1.
+[[nodiscard("Discarding allocated pointer")]]
+int cu_allocator_try_realloc(void **mem, size_t newsize, size_t oldsize, struct cu_allocator *alloc);
+
 // Allocates a new array of `nel` elements, each `elem_size` in size, using
 // the allocator `alloc`.
 //
@@ -92,6 +100,14 @@ inline static void cu_allocator_freearray(void *mem, size_t nel, size_t elemsize
 [[nodiscard("Discarding allocated pointer")]]
 void *cu_allocator_reallocarray(void *mem, size_t new_nel, size_t old_nel, size_t elem_size, struct cu_allocator *alloc);
 
+// Sets *mem to the newly-allocated pointer if allocation succeeds, does
+// nothing when allocation fails.
+//
+// On success, returns 0.
+// On failure, returns -1.
+[[nodiscard("Discarding allocated pointer")]]
+int cu_allocator_try_reallocarray(void **mem, size_t new_nel, size_t old_nel, size_t elem_size, struct cu_allocator *alloc);
+
 // Attempts to call cu_allocator_realloc() on its arguments.
 // If cu_allocator_realloc() fails, the pointer gets freed automatically.
 //
@@ -106,27 +122,4 @@ inline static void *cu_allocator_reallocf(void *mem, size_t newsize, size_t olds
 	}
 	return result;
 }
-
-// Creates a dummy allocator.
-//
-// If you're looking to use a cu_allocator, this is likely not what you want.
-// You can just pass a NULL cu_allocator to any function that asks for one;
-// this will make functions default to the libc allocator.
-//
-// The dummy allocator created by this function itself uses the libc allocator.
-// It's effectively libc malloc that makes sure the correct sizes are passed to
-// malloc and free.
-//
-// This dummy allocator is not itself thread-safe; calling alloc() and free()
-// from multiple threads is likely to result in race conditions.
-// However, different dummy allocators do not interfere with each other;
-// so, if you want to run multiple threads, call this function multiple times
-// and pass each dummy allocator you get to a different thread.
-[[nodiscard("Discarding allocated dummy allocator")]]
-struct cu_allocator cu_get_dummy_test_alloc(void);
-
-// Frees any memory associated with a dummy test allocator.
-//
-// It's invalid to call this on any non-dummy test allocator.
-void cu_free_dummy_test_alloc(struct cu_allocator *alloc);
 

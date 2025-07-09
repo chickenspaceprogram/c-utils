@@ -38,24 +38,43 @@ struct {\
 #define cu_deque_size(DEQUE) ((DEQUE).nel)
 #define cu_deque_capacity(DEQUE) ((DEQUE).arrsize)
 
-#define cu_deque_reserve(DEQUE, AMOUNT, ALLOC) ({\
-	int CU_DEQUE_RESERVE_RETVAL_INTERNAL_ = 0;\
-	if ((AMOUNT) > (DEQUE).arrsize) {\
-		typeof((DEQUE).array) CU_DEQUE_RESERVE_NEWARR_INTERNAL_ = cu_allocator_allocarray(cu_next_pwr_2(AMOUNT), sizeof(*((DEQUE).array)), (ALLOC));\
-		if (CU_DEQUE_RESERVE_NEWARR_INTERNAL_ == NULL) {\
-			CU_DEQUE_RESERVE_RETVAL_INTERNAL_ = -1;\
-		}\
-		else {\
-			memcpy(CU_DEQUE_RESERVE_NEWARR_INTERNAL_, (DEQUE).array + (DEQUE).firstel, ((DEQUE).arrsize - (DEQUE).firstel) * sizeof(*((DEQUE).array)));\
-			memcpy(CU_DEQUE_RESERVE_NEWARR_INTERNAL_ + (DEQUE).arrsize - (DEQUE).firstel, (DEQUE).array, (DEQUE).firstel * sizeof(*((DEQUE).array)));\
-			cu_allocator_freearray((DEQUE).array, (DEQUE).arrsize, sizeof(*((DEQUE).array)), (ALLOC));\
-			(DEQUE).array = CU_DEQUE_RESERVE_NEWARR_INTERNAL_;\
-			(DEQUE).firstel = 0;\
-			(DEQUE).arrsize = cu_next_pwr_2(AMOUNT);\
-		}\
-	}\
-	CU_DEQUE_RESERVE_RETVAL_INTERNAL_;\
-})
+// awful function
+static inline int 
+CU_DEQUE_GET_NEWARR_INTERNAL_(
+	void **arr,
+	size_t reserveamt,
+	size_t arrsize,
+	size_t elsize,
+	size_t firstel,
+	size_t nel,
+	struct cu_allocator *alloc
+) {
+	char *newarr = cu_allocator_allocarray(cu_next_pwr_2(reserveamt), elsize, alloc);
+	char *oldarr = *arr;
+	if (newarr == NULL)
+		return -1;
+	if (firstel + nel > arrsize) {
+		memcpy(newarr, oldarr + firstel * elsize, (arrsize - firstel) * elsize);
+		memcpy(newarr + (arrsize - firstel) * elsize, oldarr, (firstel + nel - arrsize) * elsize);
+	}
+	else {
+		memcpy(newarr, oldarr + firstel * elsize, nel * elsize);
+	}
+
+	cu_allocator_freearray(oldarr, arrsize, elsize, alloc);
+	*arr = newarr;
+	return 0;
+}
+
+#define cu_deque_reserve(DEQUE, AMOUNT, ALLOC) (\
+	((AMOUNT) > (DEQUE).arrsize) ? (\
+		(CU_DEQUE_GET_NEWARR_INTERNAL_((void **)&((DEQUE).array), AMOUNT, (DEQUE).arrsize, sizeof(*((DEQUE).array)), (DEQUE).firstel, (DEQUE).nel, (ALLOC)) == 0) ? (\
+			(DEQUE).arrsize = cu_next_pwr_2(AMOUNT),\
+			(DEQUE).firstel = 0,0\
+		) : (-1)\
+	) : (0)\
+)
+
 
 #define cu_deque_push_back(DEQUE, ELEM, ALLOC)\
 	((cu_deque_reserve(DEQUE, (DEQUE).nel + 1, ALLOC) == 0) ?\
