@@ -1,6 +1,5 @@
 #pragma once
-
-typedef struct cu_sem_internal cu_sem;
+#include <stdint.h>
 
 #if defined(CUTILS_HAVE_C11_THREADS)
 #include <threads.h>
@@ -83,6 +82,8 @@ void tss_delete(tss_t tss_id);
 #else
 #error "c-utils requires either C11 threads or pthreads to compile"
 #endif
+
+typedef struct cu_sem_internal cu_sem;
 
 // presume c11 threading stuff is defined
 

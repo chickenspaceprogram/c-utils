@@ -60,7 +60,12 @@ thrd_t thrd_current(void)
 }
 int thrd_sleep(const struct timespec *duration, struct timespec *remaining)
 {
-	return nanosleep(duration, remaining);
+	int retval = nanosleep(duration, remaining);
+	if (retval != 0 && errno == EINTR)
+		return -1;
+	if (retval != 0)
+		return -2;
+	return 0;
 }
 void thrd_yield(void)
 {
