@@ -3,8 +3,87 @@
 #undef NDEBUG
 #include <assert.h>
 #include <errno.h>
+#include <stdbool.h>
 
 #define NUM_EINTR 128
+
+struct thread_exit_info {
+	struct timespec sleepamt;
+	int exitcode;
+	bool free_exitinfo;
+};
+
+static int thread_exit(void *info)
+{
+	struct thread_exit_info *exinf = info;
+	struct thread_exit_info exinf_copy = *exinf;
+	if (exinf_copy.free_exitinfo)
+		free(info);
+	struct timespec sleeptime = exinf_copy.sleepamt;
+	struct timespec timeleft;
+	int retval = 0;
+	int eintr_left = NUM_EINTR;
+	do {
+		retval = thrd_sleep(&sleeptime, &timeleft);
+		sleeptime = timeleft;
+	} while (retval == -1 && eintr_left-- > 0);
+	assert(retval == 0);
+	return exinf_copy.exitcode;
+}
+
+struct thread_id {
+	mtx_t idmut;
+	thrd_t thread_id;
+};
+
+static int thread_cmpid(void *id)
+{
+	struct thread_id *thread = id;
+	int retval = mtx_lock(&(thread->idmut));
+	assert(retval == thrd_success);
+	
+	thrd_t arg_thrd = thread->thread_id;
+	thrd_t this_thrd = thrd_current();
+
+	retval = mtx_unlock(&(thread->idmut));
+	assert(retval == thrd_success);
+	if (thrd_equal(arg_thrd, this_thrd))
+		return 0;
+	return -1;
+}
+
+static void test_thread_detach(void)
+{
+	thrd_t thread;
+	struct thread_exit_info *exinf = malloc(sizeof(struct thread_exit_info));
+	assert(exinf != NULL);
+	exinf->sleepamt.tv_nsec = 0;
+	exinf->sleepamt.tv_sec = 1;
+	exinf->free_exitinfo = true;
+	exinf->exitcode = 0;
+	int retval = thrd_create(&thread, thread_exit, exinf);
+	assert(retval == thrd_success);
+	retval = thrd_detach(thread);
+	assert(retval == thrd_success);
+}
+
+static void test_thread_current(void)
+{
+	struct thread_id id;
+	int result = mtx_init(&(id.idmut), mtx_plain);
+	assert(result == thrd_success);
+	result = mtx_lock(&(id.idmut));
+	assert(result == thrd_success);
+	result = thrd_create(&(id.thread_id), thread_cmpid, &id);
+	assert(result == thrd_success);
+	result = mtx_unlock(&(id.idmut));
+	assert(result == thrd_success);
+	int out = 1234;
+	result = thrd_join(id.thread_id, &out);
+	assert(out == 0);
+	assert(result == 0);
+	mtx_destroy(&(id.idmut));
+}
 
 static void test_mtx_recursive(void)
 {
@@ -28,7 +107,7 @@ struct {
 } targetvar;
 once_flag flag = ONCE_FLAG_INIT;
 
-void inc_targetvar(void)
+static void inc_targetvar(void)
 {
 	int retval = mtx_lock(&(targetvar.mutex));
 	assert(retval == thrd_success);
@@ -37,14 +116,14 @@ void inc_targetvar(void)
 	assert(retval == thrd_success);
 }
 
-int callonce_targetvar(void *asdf)
+static int callonce_targetvar(void *asdf)
 {
 	call_once(&flag, inc_targetvar);
 	return 0;
 }
 
 
-void test_call_once(void)
+static void test_call_once(void)
 {
 	thrd_t thrd1;
 	thrd_t thrd2;
@@ -70,7 +149,30 @@ void test_call_once(void)
 	mtx_destroy(&(targetvar.mutex));
 }
 
+static int thread_exit_cb(void *asdf)
+{
+	thrd_exit(1234);
+	return -1;
+}
+
+static void test_thread_exit(void)
+{
+	thrd_t thread;
+	int retval = thrd_create(&thread, thread_exit_cb, NULL);
+	assert(retval == thrd_success);
+	int thrd_retval = 0;
+	retval = thrd_join(thread, &thrd_retval);
+	assert(retval == thrd_success);
+	assert(thrd_retval == 1234);
+}
+
+
 int main(void) {
+	test_thread_current();
+	thrd_yield(); // ensuring call doesn't panic
+	test_thread_exit();
+	test_thread_detach();
+
 	test_mtx_recursive();
 	test_call_once();
 }
