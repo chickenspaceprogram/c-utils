@@ -8,11 +8,9 @@ cmake_minimum_required(VERSION 3.21)
 
 add_library(CUtils
 	alloc.c
-	arena.c
 	sync.c
 	include/cu/alloc.h
 	include/cu/arc.h
-	include/cu/arena.h
 	include/cu/deque.h
 	include/cu/hashmap.h
 	include/cu/intmanip.h
