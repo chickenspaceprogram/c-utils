@@ -95,7 +95,8 @@ int thrd_join(thrd_t thr, int *res)
 	if (pthread_join(thr, &retval) != 0)
 		return thrd_error;
 	intptr_t intretval = (intptr_t)retval;
-	*res = intretval;
+	if (res != NULL)
+		*res = intretval;
 	return thrd_success;
 }
 
