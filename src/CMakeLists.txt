@@ -18,7 +18,6 @@ add_library(CUtils
 	include/cu/intmanip.h
 	include/cu/minheap.h
 	include/cu/sync.h
-	include/cu/threadpool.h
 	include/cu/vector.h
 )
 
