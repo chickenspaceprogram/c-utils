@@ -48,6 +48,15 @@ void *cu_allocator_realloc(void *mem, size_t newsize, size_t oldsize, struct cu_
 	return alloc->realloc(mem, newsize, oldsize, alloc->ctx);
 }
 
+int cu_allocator_try_realloc(void **mem, size_t newsize, size_t oldsize, struct cu_allocator *alloc)
+{
+	void *newptr = cu_allocator_realloc(*mem, newsize, oldsize, alloc);
+	if (newptr == NULL)
+		return -1;
+	*mem = newptr;
+	return 0;
+}
+
 static bool check_mult_overflow(size_t n1, size_t n2)
 {
 	// should in theory work
@@ -66,3 +75,11 @@ void *cu_allocator_reallocarray(void *mem, size_t new_nel, size_t old_nel, size_
 	return cu_allocator_realloc(mem, new_nel * elem_size, old_nel * elem_size, alloc);
 }
 
+int cu_allocator_try_reallocarray(void **mem, size_t new_nel, size_t old_nel, size_t elem_size, struct cu_allocator *alloc)
+{
+	void *newptr = cu_allocator_reallocarray(*mem, new_nel, old_nel, elem_size, alloc);
+	if (newptr == NULL)
+		return -1;
+	*mem = newptr;
+	return 0;
+}

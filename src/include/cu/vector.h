@@ -119,20 +119,15 @@ _Generic((ELEMPTR), typeof((VEC).data):\
 #define cu_vector_reserve(VEC, NEWSIZE, ALLOC)\
 	cu_vector_reserve_exact((VEC), cu_next_pwr_2((NEWSIZE)), (ALLOC))
 
-// Reserves space for exactly NEWSIZE elements in VEC.
-// If NEWSIZE < cu_vector_capacity(VEC), nothing happens.
-#define cu_vector_reserve_exact(VEC, NEWSIZE, ALLOC) ({\
-	int CU_VECTOR_RESERVE_EXACT_RETVAL_INTERNAL_ = 0;\
-	if ((NEWSIZE) > (VEC).bufsize) {\
-		typeof((VEC).data) CU_VECTOR_RESERVE_EXACT_NEWPTR_INTERNAL = cu_allocator_reallocarray((VEC).data, (NEWSIZE), (VEC).bufsize, sizeof((*(VEC).data)), (ALLOC));\
-		if (CU_VECTOR_RESERVE_EXACT_NEWPTR_INTERNAL != NULL) {\
-			(VEC).data = CU_VECTOR_RESERVE_EXACT_NEWPTR_INTERNAL;\
-			(VEC).bufsize = (NEWSIZE);\
-		}\
-		else {\
-			CU_VECTOR_RESERVE_EXACT_RETVAL_INTERNAL_ = -1;\
-		}\
-	}\
-	CU_VECTOR_RESERVE_EXACT_RETVAL_INTERNAL_;\
-})
+#define cu_vector_reserve_exact(VEC, NEWSIZE, ALLOC) (\
+	((NEWSIZE) > (VEC).bufsize) ? (\
+		(cu_allocator_try_reallocarray(\
+			(void **)(&((VEC).data)),\
+			(NEWSIZE),\
+			(VEC).bufsize,\
+			sizeof(*((VEC).data)),\
+			(ALLOC)\
+		) == 0) ? ((VEC).bufsize = (NEWSIZE),0) : (-1)\
+	) : (0)\
+)
 
