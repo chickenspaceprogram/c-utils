@@ -1,6 +1,6 @@
 #include <cu/sync.h>
 
-#if 1// !defined(CUTILS_HAVE_C11_THREADS) && defined(CUTILS_HAVE_PTHREADS)
+#if !defined(CUTILS_HAVE_C11_THREADS) && defined(CUTILS_HAVE_PTHREADS)
 #include <assert.h>
 #include <stdint.h>
 
@@ -133,27 +133,87 @@ int mtx_timedlock(
 }
 int mtx_trylock(mtx_t *mutex)
 {
-	
+	if (pthread_mutex_trylock(mutex) != 0)
+		return thrd_error;
+	return thrd_success;
 }
-int mtx_unlock(mtx_t *mutex);
-void mtx_destroy(mtx_t *mutex);
+int mtx_unlock(mtx_t *mutex)
+{
+	if (pthread_mutex_unlock(mutex) != 0)
+		return thrd_error;
+	return thrd_success;
+}
+void mtx_destroy(mtx_t *mutex)
+{
+	pthread_mutex_destroy(mutex);
+}
 
-void call_once(once_flag *flag, void (*func)(void));
+void call_once(once_flag *flag, void (*func)(void))
+{
+	int retval = pthread_once(flag, func);
+	assert(retval != 0);
+}
 
-int cnd_init(cnd_t *cond);
-int cnd_signal(cnd_t *cond);
-int cnd_broadcast(cnd_t *cond);
-int cnd_wait(cnd_t *cond, mtx_t *mutex);
+int cnd_init(cnd_t *cond)
+{
+	pthread_cond_t cnd = PTHREAD_COND_INITIALIZER;
+	*cond = cnd;
+	return thrd_success;
+}
+int cnd_signal(cnd_t *cond)
+{
+	if (pthread_cond_signal(cond) != 0)
+		return thrd_error;
+	return thrd_success;
+}
+int cnd_broadcast(cnd_t *cond)
+{
+	if (pthread_cond_broadcast(cond) != 0)
+		return thrd_error;
+	return thrd_success;
+}
+int cnd_wait(cnd_t *cond, mtx_t *mutex)
+{
+	if (pthread_cond_wait(cond, mutex) != 0)
+		return thrd_error;
+	return thrd_success;
+}
 int cnd_timedwait(
 	cnd_t* restrict cond,
 	mtx_t* restrict mutex,
 	const struct timespec *restrict time_point
-);
-void cnd_destroy(cnd_t *cond);
-int tss_create(tss_t *tss_key, tss_dtor_t destructor);
-void *tss_get(tss_t tss_key);
-int tss_set(tss_t tss_id, void *val);
-void tss_delete(tss_t tss_id);
+) {
+	if (pthread_cond_timedwait(cond, mutex, time_point) != 0)
+		return thrd_error;
+	return thrd_success;
+}
+void cnd_destroy(cnd_t *cond)
+{
+	int retval = pthread_cond_destroy(cond);
+	assert(retval != 0);
+}
+
+int tss_create(tss_t *tss_key, tss_dtor_t destructor)
+{
+	if (pthread_key_create(tss_key, destructor) != 0)
+		return thrd_error;
+	return thrd_success;
+}
+void *tss_get(tss_t tss_key)
+{
+	return pthread_getspecific(tss_key);
+}
+int tss_set(tss_t tss_id, void *val)
+{
+	if (pthread_setspecific(tss_id, val) != 0)
+		return thrd_error;
+	return thrd_success;
+}
+void tss_delete(tss_t tss_id)
+{
+	int retval = pthread_key_delete(tss_id);
+	assert(retval != 0);
+}
 
 
 #endif

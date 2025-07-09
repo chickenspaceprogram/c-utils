@@ -2,7 +2,7 @@
 
 typedef struct cu_sem_internal cu_sem;
 
-#if defined(CUTILS_HAVE_C11_THREADS) && ASDFAFDASFSDAS
+#if defined(CUTILS_HAVE_C11_THREADS)
 #include <threads.h>
 #elif defined(CUTILS_HAVE_PTHREADS)
 // define c11 threads in terms of pthreads
