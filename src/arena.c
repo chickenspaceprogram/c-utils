@@ -31,6 +31,8 @@ static size_t align_index(uintptr_t baseptr, size_t cur_index, size_t align)
 {
 	assert(IS_PWR_2(align) && "Alignment must be a power of 2");
 	size_t mod = (baseptr + cur_index) & (align - 1);
+	if (mod == 0)
+		return cur_index;
 	size_t extra = align - mod;
 	assert(((baseptr + cur_index + extra) & (align - 1)) == 0 && "Something is misaligned...");
 	return cur_index + extra;
@@ -60,7 +62,7 @@ void *cu_arena_aligned_alloc(size_t amt, size_t align, struct cu_arena *arena)
 
 void cu_arena_free(struct cu_arena *arena, struct cu_allocator *alloc)
 {
-	cu_allocator_free(alloc, arena->bufsize + sizeof(struct cu_arena), alloc);
+	cu_allocator_free(arena, arena->bufsize + sizeof(struct cu_arena), alloc);
 }
 
 static void *arena_allocator_alloc(size_t amount, void *ctx)
