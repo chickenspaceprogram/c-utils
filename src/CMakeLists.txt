@@ -13,12 +13,10 @@ add_library(CUtils
 	sync.c
 	include/cu/alloc.h
 	include/cu/allocators.h
-	include/cu/arc.h
 	include/cu/deque.h
 	include/cu/hashmap.h
 	include/cu/intmanip.h
 	include/cu/minheap.h
-	include/cu/rc.h
 	include/cu/sync.h
 	include/cu/threadpool.h
 	include/cu/vector.h
