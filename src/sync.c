@@ -122,6 +122,7 @@ int mtx_lock(mtx_t *mutex)
 		return thrd_error;
 	return thrd_success;
 }
+#ifdef CUTILS_HAVE_PTHREAD_MUTEX_TIMEDLOCK // this isn't available on MacOS
 int mtx_timedlock(
 	mtx_t *restrict mutex,
 	const struct timespec *restrict time_point
@@ -131,6 +132,7 @@ int mtx_timedlock(
 		return thrd_error;
 	return thrd_success;
 }
+#endif
 int mtx_trylock(mtx_t *mutex)
 {
 	if (pthread_mutex_trylock(mutex) != 0)

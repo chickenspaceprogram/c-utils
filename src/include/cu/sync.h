@@ -52,10 +52,12 @@ int thrd_join(thrd_t thr, int *res);
 
 int mtx_init(mtx_t *mutex, int type);
 int mtx_lock(mtx_t *mutex);
+#ifdef CUTILS_HAVE_PTHREAD_MUTEX_TIMEDLOCK // this isn't available on MacOS
 int mtx_timedlock(
 	mtx_t *restrict mutex,
 	const struct timespec *restrict time_point
 );
+#endif
 int mtx_trylock(mtx_t *mutex);
 int mtx_unlock(mtx_t *mutex);
 void mtx_destroy(mtx_t *mutex);

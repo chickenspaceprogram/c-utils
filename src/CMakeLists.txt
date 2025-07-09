@@ -30,6 +30,7 @@ check_include_file(stdatomic.h HAVE_STDATOMIC_H)
 
 check_symbol_exists("__STDC_NO_THREADS__" "threads.h" NO_C11_THREADS)
 check_symbol_exists("__STDC_NO_ATOMICS__" "stdatomic.h" NO_C11_ATOMICS)
+check_symbol_exists("pthread_mutex_timedlock" "pthread.h" HAVE_PTHREAD_MUTEX_TIMEDLOCK)
 
 find_package(Threads)
 if (Threads_FOUND AND CMAKE_USE_PTHREADS_INIT)
@@ -51,6 +52,10 @@ endif()
 
 if(CUTILS_HAVE_PTHREADS)
 	target_compile_definitions(CUtils PUBLIC CUTILS_HAVE_PTHREADS)
+endif()
+
+if(HAVE_PTHREAD_MUTEX_TIMEDLOCK)
+	target_compile_definitions(CUtils PUBLIC CUTILS_HAVE_PTHREAD_MUTEX_TIMEDLOCK)
 endif()
 
 if(NO_C11_ATOMICS OR NOT HAVE_STDATOMIC_H)
