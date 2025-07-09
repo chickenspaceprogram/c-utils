@@ -11,22 +11,18 @@ add_library(CUtils
 	arena.c
 	allocators.c
 	sync.c
+	pool.c
 	include/cu/alloc.h
 	include/cu/allocators.h
+	include/cu/block_queue.h
 	include/cu/deque.h
 	include/cu/hashmap.h
 	include/cu/intmanip.h
 	include/cu/minheap.h
 	include/cu/sync.h
-	include/cu/threadpool.h
+	include/cu/pool.h
 	include/cu/vector.h
 )
-
-include(CheckSymbolExists)
-check_symbol_exists("memset_explicit" "string.h" HAVE_MEMSET_EXPLICIT)
-check_symbol_exists("explicit_bzero" "string.h" HAVE_EXPLICIT_BZERO)
-check_symbol_exists("SecureZeroMemory" "Windows.h" HAVE_SECURE_ZERO_MEMORY)
-check_symbol_exists("memset_s" "string.h" HAVE_MEMSET_S)
 
 if(HAVE_MEMSET_EXPLICIT)
 	target_compile_definitions(CUtils PRIVATE CU_HAVE_MEMSET_EXPLICIT)
@@ -43,14 +39,6 @@ endif()
 if(HAVE_MEMSET_S)
 	target_compile_definitions(CUtils PRIVATE CU_HAVE_MEMSET_S)
 endif()
-
-include(CheckIncludeFile)
-check_include_file(threads.h HAVE_THREADS_H)
-check_include_file(stdatomic.h HAVE_STDATOMIC_H)
-
-check_symbol_exists("__STDC_NO_THREADS__" "threads.h" NO_C11_THREADS)
-check_symbol_exists("__STDC_NO_ATOMICS__" "stdatomic.h" NO_C11_ATOMICS)
-check_symbol_exists("pthread_mutex_timedlock" "pthread.h" HAVE_PTHREAD_MUTEX_TIMEDLOCK)
 
 find_package(Threads)
 if (Threads_FOUND AND CMAKE_USE_PTHREADS_INIT)

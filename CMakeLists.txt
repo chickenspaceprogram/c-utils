@@ -73,4 +73,19 @@ if (C_UTILS_TESTS)
 endif()
 endfunction()
 
+include(CheckSymbolExists)
+check_symbol_exists("memset_explicit" "string.h" HAVE_MEMSET_EXPLICIT)
+check_symbol_exists("explicit_bzero" "string.h" HAVE_EXPLICIT_BZERO)
+check_symbol_exists("SecureZeroMemory" "Windows.h" HAVE_SECURE_ZERO_MEMORY)
+check_symbol_exists("memset_s" "string.h" HAVE_MEMSET_S)
+
+include(CheckIncludeFile)
+check_include_file(threads.h HAVE_THREADS_H)
+check_include_file(stdatomic.h HAVE_STDATOMIC_H)
+
+check_symbol_exists("__STDC_NO_THREADS__" "threads.h" NO_C11_THREADS)
+check_symbol_exists("__STDC_NO_ATOMICS__" "stdatomic.h" NO_C11_ATOMICS)
+check_symbol_exists("pthread_mutex_timedlock" "pthread.h" HAVE_PTHREAD_MUTEX_TIMEDLOCK)
+
+
 add_subdirectory(src)

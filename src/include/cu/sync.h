@@ -92,13 +92,42 @@ typedef struct {
 } cu_sem;
 
 int cu_sem_init(cu_sem *sem, unsigned int init_value);
+
+// Increments the counter, then returns a handle to a locked mutex.
+// While the mutex is locked, cu_sem_post and cu_sem_wait operations will block, so it should be unlocked promptly.
+//
+// This is mostly intended for synchronizing queues.
 int cu_sem_post(cu_sem *sem);
+mtx_t *cu_sem_post_lock(cu_sem *sem);
+
 int cu_sem_try_wait(cu_sem *sem);
 int cu_sem_timedwait(cu_sem *sem, const struct timespec *restrict time);
 static inline int cu_sem_wait(cu_sem *sem)
 {
 	return cu_sem_timedwait(sem, NULL);
 }
+
+// Attempts to decrement the counter.
+//
+// If this is successful, *mtx is set to a pointer to the mutex and
+// thrd_success is returned.
+//
+// If this cannot be done without blocking, thrd_busy is returned and nothing
+// is done.
+//
+// If an error occurs, thrd_error is returned and nothing is done.
+//
+// mtx may be NULL; in this case it's expected you'll use sem->mutex to unlock.
+//
+// While the mutex is locked, cu_sem_post and cu_sem_wait operations will block, so it should be unlocked promptly.
+// This is mostly intended for synchronizing queues.
+int cu_sem_try_wait_lock(mtx_t **mtx, cu_sem *sem);
+
+// Decrements the counter, then returns a handle to a locked mutex.
+// While the mutex is locked, cu_sem_post and cu_sem_wait operations will block, so it should be unlocked promptly.
+//
+// This is mostly intended for synchronizing queues.
+mtx_t *cu_sem_wait_lock(cu_sem *sem);
 static inline void cu_sem_destroy(cu_sem *sem)
 {
 	cnd_destroy(&(sem->cond));

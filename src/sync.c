@@ -264,6 +264,21 @@ int cu_sem_post(cu_sem *sem)
 
 }
 
+mtx_t *cu_sem_post_lock(cu_sem *sem)
+{
+	int retval = mtx_lock(&(sem->mutex));
+	if (retval != thrd_success)
+		return NULL;
+	++(sem->counter);
+
+	retval = cnd_signal(&(sem->cond));
+	if (retval != thrd_success) {
+		mtx_unlock(&(sem->mutex));
+		return NULL;
+	}
+	return &(sem->mutex);
+}
+
 int cu_sem_try_wait(cu_sem *sem)
 {
 	int res = mtx_lock(&(sem->mutex));
@@ -274,7 +289,7 @@ int cu_sem_try_wait(cu_sem *sem)
 		res = thrd_success;
 	}
 	else {
-		res = thrd_timedout;
+		res = thrd_busy;
 	}
 	int err = mtx_unlock(&(sem->mutex));
 	if (err != thrd_success)
@@ -310,4 +325,43 @@ int cu_sem_timedwait(cu_sem *sem, const struct timespec *restrict time)
 	if (res != thrd_success)
 		return res;
 	return thrd_success;
+}
+
+int cu_sem_try_wait_lock(mtx_t **mtx, cu_sem *sem)
+{
+	int res = mtx_lock(&(sem->mutex));
+	if (res != thrd_success)
+		return res;
+	if (sem->counter > 0) {
+		--(sem->counter);
+		res = thrd_success;
+		if (mtx != NULL)
+			*mtx = &(sem->mutex);
+	}
+	else {
+		res = thrd_busy;
+		if (mtx_unlock(&(sem->mutex)) != thrd_success)
+			return thrd_error;
+	}
+	return res;
+}
+
+mtx_t *cu_sem_wait_lock(cu_sem *sem)
+{
+	int retval = mtx_lock(&(sem->mutex));
+	if (retval != thrd_success)
+		return NULL;
+	if (sem->counter > 0) {
+		--(sem->counter);
+		return &(sem->mutex);
+	}
+	do {
+		retval = cnd_wait(&(sem->cond), &(sem->mutex));
+		if (retval != thrd_success) {
+			mtx_unlock(&(sem->mutex));
+			return NULL;
+		}
+	} while (sem->counter == 0);
+	--(sem->counter);
+	return &(sem->mutex);
 }

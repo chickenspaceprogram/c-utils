@@ -23,13 +23,14 @@ struct {\
 	size_t nel;\
 }
 
-#define cu_deque_new(DEQUE, ALLOC)\
-	((DEQUE).array = cu_allocator_allocarray((CU_DEQUE_INITSIZE), sizeof(*((DEQUE).array)), (ALLOC)),\
+#define cu_deque_new(DEQUE, ALLOC) (\
+	(DEQUE).array = cu_allocator_allocarray((CU_DEQUE_INITSIZE), sizeof(*((DEQUE).array)), (ALLOC)),\
 	(((DEQUE).array == NULL) ? -1 : (\
 	(DEQUE).arrsize = (CU_DEQUE_INITSIZE),\
 	(DEQUE).firstel = 0,\
 	(DEQUE).nel = 0,\
-	0)))
+	0))\
+)
 
 #define cu_deque_at(DEQUE, INDEX)\
 	((DEQUE).array[((DEQUE).firstel + (INDEX)) & ((DEQUE).arrsize - 1)])
