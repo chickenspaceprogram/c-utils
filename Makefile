@@ -15,38 +15,33 @@ DEBUG=-DCMAKE_BUILD_TYPE=Debug
 RELWITHDEBINFO=-DCMAKE_BUILD_TYPE=RelWithDebInfo
 RELEASE=-DCMAKE_BUILD_TYPE=Release 
 
-SENTINEL=build_sentinel
 THREADS=-j8
 BUILD_DIR=build
 
 # this is a makefile i have to shorten the commands I have to type
 
-make: $(SENTINEL)
+make: $(BUILD_DIR)
 	: 'build'
 	cmake --build $(BUILD_DIR) $(THREADS)
 
 rel: wipe
 	: 'rel'
 	cmake -B $(BUILD_DIR) $(RELEASE) $(UNIXFLAGS) $(TESTS) $(STATIC_TOOLS)
-	touch $(SENTINEL)
 	cmake --build $(BUILD_DIR) $(THREADS)
 
 dbg: wipe
 	: 'dbg'
 	cmake -B $(BUILD_DIR) $(DEBUG) $(UNIXFLAGS) $(TESTS) $(STATIC_TOOLS)
-	touch $(SENTINEL)
 	cmake --build $(BUILD_DIR) $(THREADS)
 
 reldbg: wipe
 	: 'rel with debug info'
 	cmake -B $(BUILD_DIR) $(RELWITHDEBINFO) $(UNIXFLAGS) $(TESTS) $(STATIC_TOOLS)
-	touch $(SENTINEL)
 	cmake --build $(BUILD_DIR) $(THREADS)
 
 asan: wipe
 	: 'asan'
 	cmake -B $(BUILD_DIR) $(DEBUG) $(UNIXFLAGS) $(TESTS) $(STATIC_TOOLS) $(ASAN)
-	touch $(SENTINEL)
 	cmake --build $(BUILD_DIR) $(THREADS)
 
 test: make
@@ -58,15 +53,13 @@ memcheck: make
 wipe:
 	: 'wipe'
 	rm -rf build
-	rm -f $(SENTINEL)
 
 clean:
 	: 'clean'
 	cmake --build $(BUILD_DIR) --target clean
 
-$(SENTINEL):
-	: '$(SENTINEL)'
+$(BUILD_DIR):
+	: '$(BUILD_DIR)'
 	cmake -B $(BUILD_DIR) $(DEBUG) $(UNIXFLAGS) $(TESTS) $(STATIC_TOOLS)
-	touch $(SENTINEL)
 
 
