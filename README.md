@@ -22,6 +22,8 @@ by MSVC.
 Statement-expressions are the only way to have "nice" C generics, so they're
 unavoidable in my opinion.
 
+This library *does* compile on Windows, however you must use MinGW and GCC or Clang.
+
 ## Documentation
 
 The header files have been commented a bit; the code is macro-hell and kinda
@@ -32,15 +34,14 @@ for most of the functions in this library there.
 
 Please report any bugs you encounter!
 
-At time of writing, `rc.h` and `arc.h` haven't been tested so there are likely
-bugs there. I haven't needed either and quite frankly can't be bothered.
-
 ## Features
 
 - Generic allocator API
+- Arena allocator
+- Assorted debugging/"safety" allocators
 - Datastructures:
-    - HashMap
+    - Hashmap
     - Vector/Arraylist
     - Deque
     - Min-heap
-    - Reference-counting pointer (atomic and non-atomic)
+    - C11 threads (wrapper for pthreads)
