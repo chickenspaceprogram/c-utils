@@ -10,7 +10,7 @@ struct {\
 
 #define cu_block_queue_new(QUEUE, ALLOC) (\
 	cu_deque_new((QUEUE).deque, ALLOC) == 0 ? (\
-		cu_sem_init((QUEUE).sem, 0)\
+		cu_sem_init(&((QUEUE).sem), 0)\
 	) : (thrd_error)\
 )
 
@@ -43,5 +43,5 @@ struct {\
 
 #define cu_block_queue_delete(QUEUE, ALLOC) do {\
 	cu_deque_delete((QUEUE).deque, ALLOC);\
-	cu_sem_destroy((QUEUE).sem);\
+	cu_sem_destroy(&((QUEUE).sem));\
 } while (0)

@@ -12,7 +12,7 @@ struct {\
 
 #define cu_block_pri_queue_new(QUEUE, ALLOC) (\
 	cu_minheap_new((QUEUE).minheap, ALLOC) == 0 ? (\
-		cu_sem_init((QUEUE).sem, 0)\
+		cu_sem_init(&((QUEUE).sem), 0)\
 	) : (thrd_error)\
 )
 
@@ -34,15 +34,18 @@ struct {\
 	) : ((QUEUE).tmp_storage))\
 )
 
-#define cu_block_pri_queue_remove(QUEUE, OUTELEM, CMPFN, ALLOC) (\
-	cu_sem_wait_lock(&((QUEUE).sem)) == NULL ? (thrd_error) : (\
-		(OUTELEM) = cu_minheap_top((QUEUE).minheap),\
-		cu_minheap_pop((QUEUE).minheap, CMPFN),\
-		mtx_unlock(&((QUEUE).sem.mutex))\
-	)\
-)
+#define cu_block_pri_queue_remove(QUEUE, OUTELEM, RETVAL, CMPFN, ALLOC) do {\
+	(RETVAL) = (cu_sem_wait_lock(&((QUEUE).sem)) == NULL) ? (thrd_error) : (thrd_success);\
+	if ((RETVAL) == thrd_success) {\
+		(OUTELEM) = cu_minheap_top((QUEUE).minheap);\
+		cu_minheap_pop((QUEUE).minheap, CMPFN);\
+		if (mtx_unlock(&((QUEUE).sem.mutex)) != thrd_success) {\
+			(RETVAL) = thrd_error;\
+		}\
+	}\
+} while (0)
 
 #define cu_block_pri_queue_delete(QUEUE, ALLOC) do {\
 	cu_minheap_delete((QUEUE).minheap, ALLOC);\
-	cu_sem_destroy((QUEUE).sem);\
+	cu_sem_destroy(&((QUEUE).sem));\
 } while (0)

@@ -134,6 +134,8 @@ int cu_sem_try_wait_lock(mtx_t **mtx, cu_sem *sem);
 //
 // This is mostly intended for synchronizing queues.
 mtx_t *cu_sem_wait_lock(cu_sem *sem);
+
+
 static inline void cu_sem_destroy(cu_sem *sem)
 {
 	cnd_destroy(&(sem->cond));
