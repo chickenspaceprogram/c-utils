@@ -40,10 +40,6 @@ int64_t cu_task_queue_accept(struct cu_task_queue *queue, struct cu_task *task);
 
 // nonblocking
 int64_t cu_task_queue_try_accept(struct cu_task_queue *queue, struct cu_task *task);
-static inline void cu_task_queue_zero(struct cu_task_queue *queue)
-{
-	queue->current_index = 0;
-}
 
 static inline int cu_task_orderer_new(struct cu_task_orderer *orderer, struct cu_allocator *alloc)
 {

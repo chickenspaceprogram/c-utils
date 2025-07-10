@@ -6,12 +6,12 @@
 int cu_task_queue_new(struct cu_task_queue *queue, struct cu_allocator *alloc)
 {
 	if (cu_deque_new(queue->queue, alloc) != 0)
-		return -1;
+		return thrd_error;
 	if (cu_sem_init(&queue->sem, 0) != thrd_success)
-		return -1;
+		return thrd_error;
 	queue->current_index = 0;
 	queue->alloc = alloc;
-	return 0;
+	return thrd_success;
 }
 
 
@@ -19,14 +19,15 @@ int cu_task_queue_submit(struct cu_task_queue *queue, const struct cu_task *task
 {
 	mtx_t *mut = cu_sem_post_lock(&queue->sem);
 	if (mut == NULL)
-		return -2;
+		return thrd_error;
 	if (cu_deque_push_back(queue->queue, *task, queue->alloc) != 0) {
 		mtx_unlock(mut);
-		return -2;
+		return thrd_error; 
 	}
-	if (mtx_unlock(mut) != 0)
-		return -2;
-	return 0;
+	int retval = mtx_unlock(mut);
+	if (retval != thrd_success)
+		return retval;
+	return thrd_success;
 }
 
 int64_t cu_task_queue_accept(struct cu_task_queue *queue, struct cu_task *task)
