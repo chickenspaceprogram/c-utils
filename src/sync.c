@@ -240,7 +240,7 @@ void tss_delete(tss_t tss_id)
 
 #endif
 
-int cu_sem_init(cu_sem *sem, unsigned int init_value)
+int cu_sem_init(cu_sem *sem, size_t init_value)
 {
 	sem->counter = init_value;
 	int retval = cnd_init(&(sem->cond));
@@ -333,7 +333,7 @@ int cu_sem_timedwait(cu_sem *sem, const struct timespec *restrict time)
 	return thrd_success;
 }
 
-int cu_sem_try_wait_lock(mtx_t **mtx, cu_sem *sem)
+int cu_sem_try_wait_lock(cu_sem *sem, mtx_t **mtx)
 {
 	int res = mtx_lock(&(sem->mutex));
 	if (res != thrd_success)

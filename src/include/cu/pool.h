@@ -1,17 +1,11 @@
 #pragma once
 #include <stdbool.h>
 #include <cu/minheap.h>
-#include <cu/block_queue.h>
-#include <cu/block_pri_queue.h>
+#include <cu/sync.h>
 
-struct cu_task {
-	thrd_start_t func;
-	void *arg;
-	int retval;
-};
 struct cu_pool;
-struct cu_pool *cu_pool_new(size_t nthreads, bool order_output, struct cu_allocator *alloc);
 
+struct cu_pool *cu_pool_new(size_t nthreads, bool order_output, struct cu_allocator *alloc);
 
 // Blocks until the thread pool is empty of tasks, then kills the threads and frees any resources associated with the thread pool.
 int cu_pool_delete(struct cu_pool *pool);

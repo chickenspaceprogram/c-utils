@@ -14,7 +14,6 @@ add_library(CUtils
 	pool.c
 	include/cu/alloc.h
 	include/cu/allocators.h
-	include/cu/block_queue.h
 	include/cu/deque.h
 	include/cu/hashmap.h
 	include/cu/intmanip.h

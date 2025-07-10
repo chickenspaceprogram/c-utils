@@ -1,4 +1,5 @@
 #include <cu/pool.h>
+#include <cu/deque.h>
 
 #define CMP_CU_TASK_PRI(P1, P2) ((P1).priority - (P2).priority)
 
@@ -18,14 +19,23 @@ struct cu_task_pri {
 	int64_t priority;
 };
 
+struct cu_task_orderer {
+	CU_MINHEAP_TYPE(struct cu_task_pri) queue;
+	mtx_t mutex;
+	cnd_t cond;
+	struct cu_task_pri mailbox;
+	int64_t cur_priority;
+};
+
+
 struct cu_pool {
 	struct cu_allocator *alloc;
 	size_t nthreads;
 	bool is_ordered:1;
-	CU_BLOCK_QUEUE_TYPE(struct cu_task) in_queue;
+	struct cu_task_queue in;
 	union {
-		CU_BLOCK_PRI_QUEUE_TYPE(struct cu_task_pri) order;
-		CU_BLOCK_QUEUE_TYPE(struct cu_task) unorder;
+		struct cu_task_queue out;
+		struct cu_task_orderer order;
 	} out_queue;
 	thrd_t thread_ids[];
 };
@@ -51,7 +61,9 @@ int cu_pool_delete(struct cu_pool *pool)
 	}
 	cu_block_queue_delete(pool->in_queue, pool->alloc);
 	if (pool->is_ordered) {
-		cu_block_pri_queue_delete(pool->out_queue.order, pool->alloc);
+		cu_minheap_delete(pool->out_queue.order.queue, pool->alloc);
+		cnd_destroy(&(pool->out_queue.order.cond));
+		mtx_destroy(&(pool->out_queue.order.mutex));
 	}
 	else {
 		cu_block_queue_delete(pool->out_queue.unorder, pool->alloc);
@@ -71,6 +83,9 @@ int cu_pool_wait(struct cu_pool *pool, struct cu_task *task)
 		struct cu_task_pri task;
 		int retval = thrd_success;
 		cu_block_pri_queue_remove(pool->out_queue.order, task, retval, CMP_CU_TASK_PRI, pool->alloc);
+		if (retval != thrd_success)
+			return retval;
+
 	}
 	else {
 	}

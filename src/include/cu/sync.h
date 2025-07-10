@@ -94,10 +94,10 @@ void tss_delete(tss_t tss_id);
 typedef struct {
 	cnd_t cond;
 	mtx_t mutex;
-	unsigned int counter; // unsigned int to correspond with POSIX semaphores, in case using those is more efficient
+	size_t counter; // unsigned int to correspond with POSIX semaphores, in case using those is more efficient
 } cu_sem;
 
-int cu_sem_init(cu_sem *sem, unsigned int init_value);
+int cu_sem_init(cu_sem *sem, size_t init_value);
 
 // Increments the counter, then returns a handle to a locked mutex.
 // While the mutex is locked, cu_sem_post and cu_sem_wait operations will block, so it should be unlocked promptly.
@@ -127,7 +127,7 @@ static inline int cu_sem_wait(cu_sem *sem)
 //
 // While the mutex is locked, cu_sem_post and cu_sem_wait operations will block, so it should be unlocked promptly.
 // This is mostly intended for synchronizing queues.
-int cu_sem_try_wait_lock(mtx_t **mtx, cu_sem *sem);
+int cu_sem_try_wait_lock(cu_sem *sem, mtx_t **mtx);
 
 // Decrements the counter, then returns a handle to a locked mutex.
 // While the mutex is locked, cu_sem_post and cu_sem_wait operations will block, so it should be unlocked promptly.
