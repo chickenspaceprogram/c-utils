@@ -67,7 +67,7 @@ struct {\
 #define cu_vector_data(VEC) ((VEC).data)
 
 #define cu_vector_swap_elem(VEC, INDEX1, INDEX2) do {\
-	typeof(*(VEC).data) CU_VECTOR_SWAP_ELEM_TEMP_INTERNAL_ = (VEC).data[(INDEX1)];\
+	CU_TYPEOF(*(VEC).data) CU_VECTOR_SWAP_ELEM_TEMP_INTERNAL_ = (VEC).data[(INDEX1)];\
 	(VEC).data[(INDEX1)] = (VEC).data[(INDEX2)];\
 	(VEC).data[(INDEX2)] = CU_VECTOR_SWAP_ELEM_TEMP_INTERNAL_;\
 } while (0)
@@ -77,7 +77,7 @@ struct {\
 // ELEM must be the expression whose value you wish to append to VEC.
 // ALLOC must be the same allocator previously used with the vector.
 #define cu_vector_push(VEC, ELEM, ALLOC)\
-_Generic((ELEM), typeof(*(VEC).data):\
+_Generic((ELEM), CU_TYPEOF(*(VEC).data):\
 	((cu_vector_reserve((VEC), (VEC).nel + 1, (ALLOC)) == 0) ? (\
 	(VEC).data[((VEC).nel)++] = (ELEM),0\
 	) : -1)\
@@ -85,7 +85,7 @@ _Generic((ELEM), typeof(*(VEC).data):\
 
 // Pushes all the elements at ELEMPTR onto the vector.
 #define cu_vector_pushall(VEC, ELEMPTR, NEL, ALLOC)\
-_Generic((ELEMPTR), typeof((VEC).data):\
+_Generic((ELEMPTR), CU_TYPEOF((VEC).data):\
 	((cu_vector_reserve((VEC), (VEC).nel + (NEL), (ALLOC)) == 0) ? (\
 		(memcpy((VEC).data + (VEC).nel, (ELEMPTR), (NEL) * sizeof(*((VEC).data)))),\
 		((VEC).nel += (NEL)),0\

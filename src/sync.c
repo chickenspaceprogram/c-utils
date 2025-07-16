@@ -84,7 +84,7 @@ void thrd_yield(void)
 {
 	sched_yield();
 }
-[[noreturn]] void thrd_exit(int res)
+void thrd_exit(int res)
 {
 	intptr_t resptr = (intptr_t)res;
 	pthread_exit((void *)resptr);

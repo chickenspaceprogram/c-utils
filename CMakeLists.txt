@@ -19,6 +19,7 @@ option(C_UTILS_NONPORTABLE_AUTO
 	"Automatically turns on or turns off nonportable features depending on platform. This is primarily intended for c-utils project developers."
 )
 option(C_UTILS_NONPORTABLE "Enables nonportable c-utils features.")
+set(CMAKE_C_STANDARD 23)
 
 if (C_UTILS_NONPORTABLE_AUTO)
 	if (MSVC)

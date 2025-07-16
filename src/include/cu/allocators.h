@@ -25,7 +25,10 @@ static const struct cu_allocator *STDALLOC = NULL;
 // However, different dummy allocators do not interfere with each other;
 // so, if you want to run multiple threads, call this function multiple times
 // and pass each dummy allocator you get to a different thread.
-[[nodiscard("Discarding allocated dummy allocator")]]
+//
+// Note: If CU_NONPORTABLE is defined, this just uses libc malloc and does no
+// checks. This is because it requires CU's hashmap which is itself
+// nonportable.
 struct cu_allocator cu_get_dummy_test_alloc(void);
 
 // Frees any memory associated with a dummy test allocator.

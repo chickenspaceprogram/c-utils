@@ -9,7 +9,6 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <stddef.h>
-#include <cu/hashmap.h>
 #include <string.h>
 
 #ifdef CU_HAVE_MEMSET_EXPLICIT
@@ -27,6 +26,11 @@
 
 #undef NDEBUG
 #include <assert.h>
+
+
+
+#ifdef CU_NONPORTABLE
+#include <cu/hashmap.h>
 
 union voidptrunion {
 	void *ptr;
@@ -74,7 +78,6 @@ static inline int ptrcmp(const void *p1, const void *p2)
 	}
 	return 0;
 }
-
 static inline void *dummy_test_allocfn(size_t amount, void *ctx)
 {
 	void *newptr = malloc(amount);
@@ -114,6 +117,35 @@ void cu_free_dummy_test_alloc(struct cu_allocator *alloc)
 	cu_hashmap_delete(*(CU_HASHMAP_TYPE(void *, size_t) *)alloc->ctx, NULL);
 	free(alloc->ctx);
 }
+
+#else
+
+static inline void *dummy_test_allocfn(size_t amount, void *ctx)
+{
+	return malloc(amount);
+}
+static inline void dummy_test_free(void *mem, size_t amount, void *ctx)
+{
+	free(mem);
+}
+
+struct cu_allocator cu_get_dummy_test_alloc(void)
+{
+
+	struct cu_allocator dummy = {
+		.alloc = dummy_test_allocfn,
+		.free = dummy_test_free,
+		.realloc = NULL,
+		.ctx = NULL,
+	};
+	return dummy;
+}
+void cu_free_dummy_test_alloc(struct cu_allocator *alloc)
+{
+	// no op
+}
+
+#endif
 
 
 

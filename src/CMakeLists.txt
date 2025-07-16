@@ -4,7 +4,7 @@
 
 # SPDX-License-Identifier: MPL-2.0
 
-cmake_minimum_required(VERSION 3.21)
+cmake_minimum_required(VERSION 3.25)
 
 if (C_UTILS_NONPORTABLE)
 	set(C_UTILS_NONPORTABLE_FILES
@@ -13,15 +13,16 @@ if (C_UTILS_NONPORTABLE)
 		nonport_include/cu/pool.h
 		nonport_include/cu/task.h
 		nonport_include/cu/sync.h
+		nonport_include/cu/arena.h
 		sync.c
 		pool.c
 		task.c
+		arena.c # ms doesn't support max_align_t for some unknown reason ;-;
 	)
 endif()
 
 add_library(CUtils
 	alloc.c
-	arena.c
 	allocators.c
 	include/cu/alloc.h
 	include/cu/allocators.h
@@ -31,10 +32,10 @@ add_library(CUtils
 	${C_UTILS_NONPORTABLE_FILES}
 )
 target_include_directories(CUtils PUBLIC include)
-target_compile_features(CUtils PUBLIC c_std_23) # headers use typeof()
 
 if (C_UTILS_NONPORTABLE)
 	target_include_directories(CUtils PUBLIC nonport_include)
+	target_compile_definitions(CUtils PUBLIC CU_NONPORTABLE)
 endif()
 
 if(HAVE_MEMSET_EXPLICIT)
@@ -52,6 +53,23 @@ endif()
 if(HAVE_MEMSET_S)
 	target_compile_definitions(CUtils PRIVATE CU_HAVE_MEMSET_S)
 endif()
+
+try_compile(HAVE_TYPEOF SOURCES "${PROJECT_SOURCE_DIR}/src/typeof_test.c" COMPILE_DEFINITIONS "-DCU_TYPEOF=typeof" C_STANDARD 23)
+try_compile(HAVE_DUNDER_TYPEOF SOURCES "${PROJECT_SOURCE_DIR}/src/typeof_test.c" COMPILE_DEFINITIONS "-DCU_TYPEOF=__typeof__" C_STANDARD 23)
+if (HAVE_TYPEOF)
+	target_compile_definitions(CUtils PUBLIC CU_TYPEOF=typeof)
+elseif(HAVE_DUNDER_TYPEOF)
+	target_compile_definitions(CUtils PUBLIC CU_TYPEOF=__typeof__)
+else()
+	message(SEND_ERROR "c-utils requires typeof() to compile")
+endif()
+
+if (C_UTILS_NONPORTABLE)
+include(CheckIncludeFile)
+check_include_file(threads.h HAVE_THREADS_H)
+
+check_symbol_exists("__STDC_NO_THREADS__" "threads.h" NO_C11_THREADS)
+check_symbol_exists("pthread_mutex_timedlock" "pthread.h" HAVE_PTHREAD_MUTEX_TIMEDLOCK)
 
 find_package(Threads)
 if (Threads_FOUND AND CMAKE_USE_PTHREADS_INIT)
@@ -78,10 +96,6 @@ endif()
 if(HAVE_PTHREAD_MUTEX_TIMEDLOCK)
 	target_compile_definitions(CUtils PUBLIC CUTILS_HAVE_PTHREAD_MUTEX_TIMEDLOCK)
 endif()
-
-if(NO_C11_ATOMICS OR NOT HAVE_STDATOMIC_H)
-	message(SEND_ERROR "c-utils requires C11 atomics, which your system lacks")
 endif()
-
 
 add_subdirectory(tests)
