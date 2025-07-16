@@ -10,19 +10,19 @@ if (C_UTILS_NONPORTABLE)
 	set(C_UTILS_NONPORTABLE_FILES
 		nonport_include/cu/hashmap.h
 		nonport_include/cu/minheap.h
-		nonport_include/cu/pool.h
-		nonport_include/cu/task.h
-		nonport_include/cu/sync.h
 		nonport_include/cu/arena.h
-		sync.c
-		pool.c
-		task.c
 		arena.c # ms doesn't support max_align_t for some unknown reason ;-;
 	)
 endif()
 
 add_library(CUtils
 	alloc.c
+		sync.c
+		pool.c
+		task.c
+		nonport_include/cu/pool.h
+		nonport_include/cu/task.h
+		nonport_include/cu/sync.h
 	allocators.c
 	include/cu/alloc.h
 	include/cu/allocators.h
