@@ -11,13 +11,14 @@ if (C_UTILS_NONPORTABLE)
 		nonport_include/cu/hashmap.h
 		nonport_include/cu/minheap.h
 		nonport_include/cu/sync.h
+		nonport_include/cu/arena.h
 		sync.c
+		arena.c # ms doesn't support max_align_t for some unknown reason ;-;
 	)
 endif()
 
 add_library(CUtils
 	alloc.c
-	arena.c
 	allocators.c
 	include/cu/alloc.h
 	include/cu/allocators.h
