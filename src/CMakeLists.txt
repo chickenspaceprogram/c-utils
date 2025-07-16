@@ -6,22 +6,34 @@
 
 cmake_minimum_required(VERSION 3.21)
 
+if (C_UTILS_NONPORTABLE)
+	set(C_UTILS_NONPORTABLE_FILES
+		nonport_include/cu/hashmap.h
+		nonport_include/cu/minheap.h
+		nonport_include/include/cu/sync.h
+		sync.c
+	)
+endif()
+
 add_library(CUtils
 	alloc.c
 	arena.c
 	allocators.c
-	sync.c
 	pool.c
 	include/cu/alloc.h
 	include/cu/allocators.h
 	include/cu/deque.h
-	include/cu/hashmap.h
 	include/cu/intmanip.h
-	include/cu/minheap.h
-	include/cu/sync.h
 	include/cu/pool.h
 	include/cu/vector.h
+	${C_UTILS_NONPORTABLE_FILES}
 )
+target_include_directories(CUtils PUBLIC include)
+target_compile_features(CUtils PUBLIC c_std_23) # headers use typeof()
+
+if (C_UTILS_NONPORTABLE)
+	target_include_directories(CUtils PUBLIC nonport_include)
+endif()
 
 if(HAVE_MEMSET_EXPLICIT)
 	target_compile_definitions(CUtils PRIVATE CU_HAVE_MEMSET_EXPLICIT)
@@ -69,7 +81,5 @@ if(NO_C11_ATOMICS OR NOT HAVE_STDATOMIC_H)
 	message(SEND_ERROR "c-utils requires C11 atomics, which your system lacks")
 endif()
 
-target_include_directories(CUtils PUBLIC include)
-target_compile_features(CUtils PUBLIC c_std_23) # headers use typeof()
 
 add_subdirectory(tests)

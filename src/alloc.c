@@ -9,7 +9,6 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <cu/alloc.h>
-#include <cu/hashmap.h>
 
 void *cu_allocator_alloc(size_t memsize, struct cu_allocator *alloc)
 {
