@@ -17,18 +17,18 @@ endif()
 
 add_library(CUtils
 	alloc.c
-		sync.c
-		pool.c
-		task.c
-		nonport_include/cu/pool.h
-		nonport_include/cu/task.h
-		nonport_include/cu/sync.h
+	sync.c
+	pool.c
+	task.c
 	allocators.c
 	include/cu/alloc.h
 	include/cu/allocators.h
 	include/cu/deque.h
 	include/cu/intmanip.h
 	include/cu/vector.h
+	include/cu/pool.h
+	include/cu/task.h
+	include/cu/sync.h
 	${C_UTILS_NONPORTABLE_FILES}
 )
 target_include_directories(CUtils PUBLIC include)
