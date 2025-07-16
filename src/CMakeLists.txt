@@ -55,12 +55,11 @@ if(HAVE_MEMSET_S)
 	target_compile_definitions(CUtils PRIVATE CU_HAVE_MEMSET_S)
 endif()
 
+if (C_UTILS_NONPORTABLE)
 include(CheckIncludeFile)
 check_include_file(threads.h HAVE_THREADS_H)
-check_include_file(stdatomic.h HAVE_STDATOMIC_H)
 
 check_symbol_exists("__STDC_NO_THREADS__" "threads.h" NO_C11_THREADS)
-check_symbol_exists("__STDC_NO_ATOMICS__" "stdatomic.h" NO_C11_ATOMICS)
 check_symbol_exists("pthread_mutex_timedlock" "pthread.h" HAVE_PTHREAD_MUTEX_TIMEDLOCK)
 
 find_package(Threads)
@@ -88,10 +87,6 @@ endif()
 if(HAVE_PTHREAD_MUTEX_TIMEDLOCK)
 	target_compile_definitions(CUtils PUBLIC CUTILS_HAVE_PTHREAD_MUTEX_TIMEDLOCK)
 endif()
-
-if(NO_C11_ATOMICS OR NOT HAVE_STDATOMIC_H)
-	message(SEND_ERROR "c-utils requires C11 atomics, which your system lacks")
 endif()
-
 
 add_subdirectory(tests)
