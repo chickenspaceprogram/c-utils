@@ -82,7 +82,7 @@ CU_DEQUE_GET_NEWARR_INTERNAL_(
 	: (-1))
 
 #define cu_deque_pushall_back(DEQUE, ELEMPTR, NEL, ALLOC)\
-_Generic((ELEMPTR), typeof((DEQUE).array):\
+_Generic((ELEMPTR), CU_TYPEOF((DEQUE).array):\
 ((cu_deque_reserve(DEQUE, (DEQUE).nel + (NEL), ALLOC) == 0) ? (\
 	(((DEQUE).nel + (DEQUE).firstel) & ((DEQUE).arrsize - 1)) + (NEL) > (DEQUE).arrsize ? (\
 		memcpy(\
@@ -122,7 +122,7 @@ _Generic((ELEMPTR), typeof((DEQUE).array):\
 	: (-1))
 
 #define cu_deque_pushall_front(DEQUE, ELEMPTR, NEL, ALLOC)\
-_Generic((ELEMPTR), typeof((DEQUE).array):\
+_Generic((ELEMPTR), CU_TYPEOF((DEQUE).array):\
 	((cu_deque_reserve((DEQUE), (DEQUE).nel + (NEL), (ALLOC)) == 0) ? (\
 		(DEQUE).firstel == 0 ? (\
 			memcpy((DEQUE).array + (DEQUE).arrsize - (NEL), (ELEMPTR), (NEL) * sizeof(*((DEQUE).array)))\

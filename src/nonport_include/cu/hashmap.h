@@ -49,7 +49,7 @@
 
 #define CU_HASHMAP_AT_INTERNAL_(MAP, KEY, HASHFN, CMPFN) ({\
 	size_t CU_HASHMAP_AT_INDEX_INTERNAL_ = HASHFN((KEY)) & ((MAP).bufsize - 1);\
-	typeof(((MAP).array)) CU_HASHMAP_AT_RETVAL_INTERNAL_ = NULL;\
+	CU_TYPEOF(((MAP).array)) CU_HASHMAP_AT_RETVAL_INTERNAL_ = NULL;\
 	while ((MAP).array[CU_HASHMAP_AT_INDEX_INTERNAL_].is_filled) {\
 		if (CMPFN((KEY), (MAP).array[CU_HASHMAP_AT_INDEX_INTERNAL_].key) == 0) {\
 			CU_HASHMAP_AT_RETVAL_INTERNAL_ = &(MAP).array[CU_HASHMAP_AT_INDEX_INTERNAL_];\
@@ -87,8 +87,8 @@
 
 #define cu_hashmap_reserve(MAP, SPACEAMT, ALLOC, HASHFN) (((MAP).nel < ((CU_HASHMAP_MAXLOADFACTOR) * (MAP).bufsize)) ? 0 : ({\
 	int CU_HASHMAP_RESERVE_RETVAL_INTERNAL_ = 0;\
-	typeof((MAP).array) CU_HASHMAP_RESERVE_NEWARR_INTERNAL_ = cu_allocator_alloc((MAP).bufsize * 2 * sizeof((*((MAP).array))), (ALLOC));\
-	typeof((MAP).array) CU_HASHMAP_RESERVE_OLDARR_INTERNAL_ = (MAP).array;\
+	CU_TYPEOF((MAP).array) CU_HASHMAP_RESERVE_NEWARR_INTERNAL_ = cu_allocator_alloc((MAP).bufsize * 2 * sizeof((*((MAP).array))), (ALLOC));\
+	CU_TYPEOF((MAP).array) CU_HASHMAP_RESERVE_OLDARR_INTERNAL_ = (MAP).array;\
 	if (CU_HASHMAP_RESERVE_NEWARR_INTERNAL_ == NULL) {\
 		CU_HASHMAP_RESERVE_RETVAL_INTERNAL_ = -1;\
 	}\
@@ -120,14 +120,14 @@
 } while (0);
 
 #define CU_HASHMAP_BUCKETTYPE(MAP)\
-	typeof(*(MAP).array)
+	CU_TYPEOF(*(MAP).array)
 
 #define cu_hashmap_bucket_getkey(BUCKET) ((BUCKET).key)
 #define cu_hashmap_bucket_getval(BUCKET) ((BUCKET).val)
 
 #define CU_HASHMAP_ITERTYPE(MAP)\
 	struct {\
-		typeof(&MAP) map_ptr;\
+		CU_TYPEOF(&MAP) map_ptr;\
 		size_t index;\
 	}
 

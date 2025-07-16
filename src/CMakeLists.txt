@@ -4,7 +4,7 @@
 
 # SPDX-License-Identifier: MPL-2.0
 
-cmake_minimum_required(VERSION 3.21)
+cmake_minimum_required(VERSION 3.25)
 
 if (C_UTILS_NONPORTABLE)
 	set(C_UTILS_NONPORTABLE_FILES
@@ -56,6 +56,16 @@ endif()
 
 if(HAVE_MEMSET_S)
 	target_compile_definitions(CUtils PRIVATE CU_HAVE_MEMSET_S)
+endif()
+
+try_compile(HAVE_TYPEOF SOURCES "${PROJECT_SOURCE_DIR}/src/typeof_test.c" COMPILE_DEFINITIONS "-DCU_TYPEOF=typeof" C_STANDARD 23)
+try_compile(HAVE_DUNDER_TYPEOF SOURCES "${PROJECT_SOURCE_DIR}/src/typeof_test.c" COMPILE_DEFINITIONS "-DCU_TYPEOF=__typeof__" C_STANDARD 23)
+if (HAVE_TYPEOF)
+	target_compile_definitions(CUtils PUBLIC CU_TYPEOF=typeof)
+elseif(HAVE_DUNDER_TYPEOF)
+	target_compile_definitions(CUtils PUBLIC CU_TYPEOF=__typeof__)
+else()
+	message(SEND_ERROR "c-utils requires typeof() to compile")
 endif()
 
 if (C_UTILS_NONPORTABLE)
