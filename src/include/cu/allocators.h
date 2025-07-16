@@ -29,7 +29,6 @@ static const struct cu_allocator *STDALLOC = NULL;
 // Note: If CU_NONPORTABLE is defined, this just uses libc malloc and does no
 // checks. This is because it requires CU's hashmap which is itself
 // nonportable.
-[[nodiscard("Discarding allocated dummy allocator")]]
 struct cu_allocator cu_get_dummy_test_alloc(void);
 
 // Frees any memory associated with a dummy test allocator.
