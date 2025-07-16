@@ -6,6 +6,7 @@
 
 #include <cu/minheap.h>
 #include <cu/allocators.h>
+#include <cu/alloc.h>
 #undef NDEBUG
 #include <assert.h>
 

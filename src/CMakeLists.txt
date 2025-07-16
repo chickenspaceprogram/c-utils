@@ -32,6 +32,7 @@ set_property(TARGET CUtils PROPERTY C_STANDARD 23)
 
 if (C_UTILS_NONPORTABLE)
 	target_include_directories(CUtils PUBLIC nonport_include)
+	target_compile_definitions(CUtils PUBLIC CU_NONPORTABLE)
 endif()
 
 include(CheckSymbolExists)
