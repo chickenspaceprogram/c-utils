@@ -11,7 +11,11 @@ if (C_UTILS_NONPORTABLE)
 		nonport_include/cu/hashmap.h
 		nonport_include/cu/minheap.h
 		nonport_include/include/cu/sync.h
+		nonport_include/cu/pool.h
+		nonport_include/cu/task.h
 		sync.c
+		pool.c
+		task.c
 	)
 endif()
 
@@ -19,12 +23,10 @@ add_library(CUtils
 	alloc.c
 	arena.c
 	allocators.c
-	pool.c
 	include/cu/alloc.h
 	include/cu/allocators.h
 	include/cu/deque.h
 	include/cu/intmanip.h
-	include/cu/pool.h
 	include/cu/vector.h
 	${C_UTILS_NONPORTABLE_FILES}
 )
