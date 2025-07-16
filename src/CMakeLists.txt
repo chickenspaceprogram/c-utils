@@ -27,7 +27,8 @@ add_library(CUtils
 	${C_UTILS_NONPORTABLE_FILES}
 )
 target_include_directories(CUtils PUBLIC include)
-target_compile_features(CUtils PUBLIC c_std_23) # headers use typeof()
+
+set_property(TARGET CUtils PROPERTY C_STANDARD 23)
 
 if (C_UTILS_NONPORTABLE)
 	target_include_directories(CUtils PUBLIC nonport_include)
