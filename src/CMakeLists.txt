@@ -10,9 +10,7 @@ if (C_UTILS_NONPORTABLE)
 	set(C_UTILS_NONPORTABLE_FILES
 		nonport_include/cu/hashmap.h
 		nonport_include/cu/minheap.h
-		nonport_include/cu/sync.h
 		nonport_include/cu/arena.h
-		sync.c
 		arena.c # ms doesn't support max_align_t for some unknown reason ;-;
 	)
 endif()
@@ -20,11 +18,13 @@ endif()
 add_library(CUtils
 	alloc.c
 	allocators.c
+	sync.c
 	include/cu/alloc.h
 	include/cu/allocators.h
 	include/cu/deque.h
 	include/cu/intmanip.h
 	include/cu/vector.h
+	include/cu/sync.h
 	${C_UTILS_NONPORTABLE_FILES}
 )
 target_include_directories(CUtils PUBLIC include)
@@ -66,7 +66,6 @@ else()
 	message(SEND_ERROR "c-utils requires typeof() to compile")
 endif()
 
-if (C_UTILS_NONPORTABLE)
 include(CheckIncludeFile)
 check_include_file(threads.h HAVE_THREADS_H)
 
@@ -97,7 +96,6 @@ endif()
 
 if(HAVE_PTHREAD_MUTEX_TIMEDLOCK)
 	target_compile_definitions(CUtils PUBLIC CUTILS_HAVE_PTHREAD_MUTEX_TIMEDLOCK)
-endif()
 endif()
 
 add_subdirectory(tests)
