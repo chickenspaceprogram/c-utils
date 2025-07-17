@@ -64,7 +64,6 @@ else()
 	message(SEND_ERROR "c-utils requires typeof() to compile")
 endif()
 
-if (C_UTILS_NONPORTABLE)
 include(CheckIncludeFile)
 check_include_file(threads.h HAVE_THREADS_H)
 
@@ -95,7 +94,6 @@ endif()
 
 if(HAVE_PTHREAD_MUTEX_TIMEDLOCK)
 	target_compile_definitions(CUtils PUBLIC CUTILS_HAVE_PTHREAD_MUTEX_TIMEDLOCK)
-endif()
 endif()
 
 add_subdirectory(tests)
