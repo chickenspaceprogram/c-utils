@@ -16,13 +16,19 @@ Because of the necessity for static linking (and the fact that strong-copyleft
 library licenses are a bit rude), I've opted for using the MPL here instead of
 LGPL/GPL.
 
-Furthermore, this library won't compile on MSVC.
-It uses statement-expressions, which are a GCC/Clang extension and unsupported
-by MSVC.
-Statement-expressions are the only way to have "nice" C generics, so they're
-unavoidable in my opinion.
+Also, parts of this library won't compile on MSVC.
+This library uses statement-expressions, which are a GCC/Clang extension and
+unsupported by MSVC.
+Statement-expressions are often the only way to have "nice" C generics, so
+they're unavoidable in my opinion.
+It's possible in future I'll make API changes so that more of the lib works on
+MSVC.
 
-This library *does* compile on Windows, however you must use MinGW and GCC or Clang.
+The extra parts of this library are disabled by default. To enable them, define
+`C_UTILS_NONPORTABLE=ON` when invoking CMake.
+
+The nonportable parts of this lib do compile on Windows, however you must use
+MinGW and GCC or Clang.
 
 ## Documentation
 
