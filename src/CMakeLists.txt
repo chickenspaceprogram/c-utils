@@ -23,6 +23,7 @@ add_library(CUtils
 	alloc.c
 	sync.c
 	allocators.c
+	sync.c
 	include/cu/alloc.h
 	include/cu/allocators.h
 	include/cu/deque.h
