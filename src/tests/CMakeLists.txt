@@ -6,13 +6,13 @@
 
 cmake_minimum_required(VERSION 3.14)
 
-make_test(test_vector.c PUBLIC CUtils)
-make_test(test_deque.c PUBLIC CUtils)
+c_utils_make_test(test_vector.c PUBLIC CUtils)
+c_utils_make_test(test_deque.c PUBLIC CUtils)
 
 
 if (C_UTILS_NONPORTABLE)
-	make_test(test_arena.c PUBLIC CUtils)
-	make_test(test_minheap.c PUBLIC CUtils)
-	make_test(test_hashmap.c PUBLIC CUtils)
-	make_test(test_sync.c PUBLIC CUtils)
+	c_utils_make_test(test_arena.c PUBLIC CUtils)
+	c_utils_make_test(test_minheap.c PUBLIC CUtils)
+	c_utils_make_test(test_hashmap.c PUBLIC CUtils)
+	c_utils_make_test(test_sync.c PUBLIC CUtils)
 endif()

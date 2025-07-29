@@ -98,4 +98,17 @@ if(HAVE_PTHREAD_MUTEX_TIMEDLOCK)
 	target_compile_definitions(CUtils PUBLIC CUTILS_HAVE_PTHREAD_MUTEX_TIMEDLOCK)
 endif()
 
+
+function(c_utils_make_test testfilename) # can take libs to link as an optional arg
+if (C_UTILS_TESTS)
+	get_filename_component(EXENAME ${testfilename} NAME_WLE)
+	add_executable(${EXENAME} ${testfilename})
+	target_link_libraries(${EXENAME} ${ARGN})
+	add_test(
+		NAME ${EXENAME}
+		COMMAND $<TARGET_FILE:${EXENAME}>
+	)
+endif()
+endfunction()
+
 add_subdirectory(tests)
