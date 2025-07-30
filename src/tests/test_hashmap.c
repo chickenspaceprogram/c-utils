@@ -7,8 +7,8 @@
 #include <cu/hashmap.h>
 #include <cu/allocators.h>
 #include <stdint.h>
-#undef NDEBUG
 #include <assert.h>
+#include <cu/dbgassert.h>
 
 static int cmp_str(const char *s1, const char *s2)
 {
@@ -83,17 +83,17 @@ static void test_hashmap(struct cu_allocator *dummy_test_alloc)
 	};
 
 	CU_HASHMAP_TYPE(const char *, int) hm;
-	assert(cu_hashmap_new(hm, dummy_test_alloc) == 0);
+	dbgassert(cu_hashmap_new(hm, dummy_test_alloc) == 0);
 	for (int i = 0; i < 16; ++i) {
-		assert(cu_hashmap_at(hm, keys[i], hash_str, cmp_str) == NULL);
+		dbgassert(cu_hashmap_at(hm, keys[i], hash_str, cmp_str) == NULL);
 	}
 	for (int i = 0; i < 16; ++i) {
-		assert(cu_hashmap_insert(hm, keys[i], vals[i], dummy_test_alloc, hash_str, cmp_str) == 0);
+		dbgassert(cu_hashmap_insert(hm, keys[i], vals[i], dummy_test_alloc, hash_str, cmp_str) == 0);
 	}
 	for (int i = 0; i < 16; ++i) {
 		const int *retval = cu_hashmap_at(hm, keys[i], hash_str, cmp_str);
-		assert(retval != NULL);
-		assert(*retval == vals[i]);
+		dbgassert(retval != NULL);
+		dbgassert(*retval == vals[i]);
 	}
 	cu_hashmap_remove(hm, "key1", hash_str, cmp_str);
 	cu_hashmap_remove(hm, "key4", hash_str, cmp_str);
@@ -108,13 +108,13 @@ static void test_hashmap(struct cu_allocator *dummy_test_alloc)
 	do {
 		bucket = cu_hashmap_iter_next(iter);
 		if (bucket != NULL) {
-			assert(bucket->val >= 1 && bucket->val <= 16);
+			dbgassert(bucket->val >= 1 && bucket->val <= 16);
 			foundflags[bucket->val - 1] = true; 
-			assert(strcmp(keys[bucket->val - 1], bucket->key) == 0);
+			dbgassert(strcmp(keys[bucket->val - 1], bucket->key) == 0);
 		}
 	} while (bucket != NULL);
 	for (int i = 0; i < 16; ++i) {
-		assert(foundflags[i] == targetflags[i]);
+		dbgassert(foundflags[i] == targetflags[i]);
 	}
 	cu_hashmap_delete(hm, dummy_test_alloc);
 }

@@ -10,6 +10,8 @@
 #include <stdlib.h>
 #include <stddef.h>
 #include <string.h>
+#include <cu/dbgassert.h>
+#include <assert.h>
 
 #ifdef CU_HAVE_MEMSET_EXPLICIT
 #	define CU_ZEROSET(PTR, LEN) (void)memset_explicit(PTR, 0, LEN)
@@ -24,8 +26,6 @@
 #	error "Need one of bzero_explicit, memset_explicit, memset_s, SecureZeroMemory for zeroing memory allocator"
 #endif
 
-#undef NDEBUG
-#include <assert.h>
 
 
 
@@ -85,15 +85,15 @@ static inline void *dummy_test_allocfn(size_t amount, void *ctx)
 		return NULL;
 	struct hmap *map = ctx;
 	int retval = cu_hashmap_insert(map->map, newptr, amount, NULL, ptrhash, ptrcmp);
-	assert(retval == 0);
+	dbgassert(retval == 0);
 	return newptr;
 }
 static inline void dummy_test_free(void *mem, size_t amount, void *ctx)
 {
 	struct hmap *map = ctx;
 	size_t *ptr = cu_hashmap_at(map->map, mem, ptrhash, ptrcmp);
-	assert(ptr != NULL);
-	assert(*ptr == amount);
+	dbgassert(ptr != NULL);
+	dbgassert(*ptr == amount);
 	free(mem);
 }
 
@@ -101,9 +101,9 @@ struct cu_allocator cu_get_dummy_test_alloc(void)
 {
 	struct hmap *map = malloc(sizeof(struct hmap));
 
-	assert(map != NULL && "Failed to allocate dummy test alloc hashmap");
+	dbgassert(map != NULL && "Failed to allocate dummy test alloc hashmap");
 	int retval = cu_hashmap_new(map->map, NULL);
-	assert(retval == 0 && "Failed to initialize dummy test alloc hashmap");
+	dbgassert(retval == 0 && "Failed to initialize dummy test alloc hashmap");
 	struct cu_allocator dummy = {
 		.alloc = dummy_test_allocfn,
 		.free = dummy_test_free,
