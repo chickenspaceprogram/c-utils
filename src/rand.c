@@ -70,9 +70,10 @@ int cu_rand_bytes(uint8_t *buf, size_t nbytes)
 	return -1;
 }
 #elif defined(CUTILS_HAVE_BCRYPT)
+#include <Ntstatus.h>
+#define WIN32_NO_STATUS
 #include <Windows.h>
 #include <assert.h>
-#include <Ntstatus.h>
 
 int cu_rand_bytes(uint8_t *buf, size_t nbytes)
 {
