@@ -15,16 +15,20 @@ if (C_UTILS_NONPORTABLE)
 	)
 endif()
 
-add_library(CUtils
+add_library(CUtils STATIC
 	alloc.c
 	allocators.c
 	sync.c
+	rand.c
+	tblhash.c
 	include/cu/alloc.h
 	include/cu/allocators.h
 	include/cu/deque.h
 	include/cu/intmanip.h
 	include/cu/vector.h
 	include/cu/sync.h
+	include/cu/tblhash.h
+	include/cu/rand.h
 	${C_UTILS_NONPORTABLE_FILES}
 )
 target_include_directories(CUtils PUBLIC include)
@@ -97,6 +101,31 @@ endif()
 if(HAVE_PTHREAD_MUTEX_TIMEDLOCK)
 	target_compile_definitions(CUtils PUBLIC CUTILS_HAVE_PTHREAD_MUTEX_TIMEDLOCK)
 endif()
+
+if (EXISTS "/dev/urandom")
+	target_compile_definitions(CUtils PRIVATE CUTILS_HAVE_URANDOM)
+endif()
+
+check_symbol_exists("getentropy" "unistd.h" HAVE_GETENTROPY)
+if (HAVE_GETENTROPY)
+	target_compile_definitions(CUtils PRIVATE CUTILS_HAVE_GETENTROPY)
+endif()
+
+check_symbol_exists("arc4random_buf" "stdlib.h" HAVE_ARC4RANDOM)
+if (HAVE_ARC4RANDOM)
+	target_compile_definitions(CUtils PRIVATE CUTILS_HAVE_ARC4RANDOM)
+endif()
+
+check_symbol_exists("BCryptGenRandom" "Bcrypt.h;Windows.h" HAVE_BCRYPT)
+if (HAVE_BCRYPTGENRANDOM)
+	target_compile_definitions(CUtils PRIVATE CUTILS_HAVE_BCRYPT)
+endif()
+
+if (NOT HAVE_URANDOM AND NOT HAVE_GETENTROPY AND NOT HAVE_ARC4RANDOM AND NOT HAVE_BCRYPT)
+message(FATAL_ERROR "Failed to find a suitable random number generation library.")
+endif() 
+
+
 
 
 function(c_utils_make_test testfilename) # can take libs to link as an optional arg

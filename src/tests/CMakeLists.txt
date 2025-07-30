@@ -8,6 +8,7 @@ cmake_minimum_required(VERSION 3.14)
 
 c_utils_make_test(test_vector.c PUBLIC CUtils)
 c_utils_make_test(test_deque.c PUBLIC CUtils)
+c_utils_make_test(test_tblhash.c PUBLIC CUtils)
 
 
 if (C_UTILS_NONPORTABLE)
