@@ -121,7 +121,7 @@ if (WIN32)
 	target_link_libraries(CUtils PRIVATE bcrypt)
 endif()
 
-if (NOT HAVE_URANDOM AND NOT HAVE_GETENTROPY AND NOT HAVE_ARC4RANDOM AND NOT HAVE_BCRYPT)
+if (NOT HAVE_URANDOM AND NOT HAVE_GETENTROPY AND NOT HAVE_ARC4RANDOM AND NOT WIN32)
 message(FATAL_ERROR "Failed to find a suitable random number generation library.")
 endif() 
 
