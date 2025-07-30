@@ -116,7 +116,7 @@ if (HAVE_ARC4RANDOM)
 	target_compile_definitions(CUtils PRIVATE CUTILS_HAVE_ARC4RANDOM)
 endif()
 
-check_symbol_exists("BCryptGenRandom" "Bcrypt.h;Windows.h" HAVE_BCRYPT)
+check_symbol_exists("BCryptGenRandom" "Windows.h" HAVE_BCRYPT)
 if (HAVE_BCRYPTGENRANDOM)
 	target_compile_definitions(CUtils PRIVATE CUTILS_HAVE_BCRYPT)
 endif()
