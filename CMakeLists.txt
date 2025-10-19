@@ -15,24 +15,11 @@ option(C_UTILS_CPPCHECK "Uses the cppcheck tool to statically analyze source cod
 option(C_UTILS_CLANG_TIDY "Uses the clang-tidy tool to statically analyze source code when building.")
 option(C_UTILS_TESTS "Builds c-utils's unit tests.")
 
-option(C_UTILS_NONPORTABLE_AUTO 
-	"Automatically turns on or turns off nonportable features depending on platform. This is primarily intended for c-utils project developers."
-)
-option(C_UTILS_NONPORTABLE "Enables nonportable c-utils features.")
 set(CMAKE_C_STANDARD 23)
-
-if (C_UTILS_NONPORTABLE_AUTO)
-	if (MSVC)
-		set(C_UTILS_NONPORTABLE OFF)
-	else()
-		set(C_UTILS_NONPORTABLE ON)
-	endif()
-endif()
 
 if(C_UTILS_TESTS)
 	include(CTest)
 endif()
-
 
 if(C_UTILS_USE_ASAN)
 	message(NOTICE "Option `C_UTILS_USE_ASAN` specified. Linking ASAN and setting `C_UTILS_DEBUG`.")
@@ -72,7 +59,5 @@ if (C_UTILS_CLANG_TIDY)
 		message(NOTICE "clang-tidy not found and not used.")
 	endif()
 endif()
-
-
 
 add_subdirectory(src)

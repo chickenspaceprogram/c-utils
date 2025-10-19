@@ -7,7 +7,7 @@
 #include <cu/rand.h>
 
 
-#ifdef CUTILS_HAVE_ARC4RANDOM
+#ifdef CU_HAVE_ARC4RANDOM
 
 #define _GNU_SOURCE
 #include <stdlib.h>
@@ -21,7 +21,7 @@ int cu_rand_bytes(uint8_t *buf, size_t nbytes)
 }
 
 
-#elif defined(CUTILS_HAVE_GETENTROPY)
+#elif defined(CU_HAVE_GETENTROPY)
 #define _DEFAULT_SOURCE
 #include <unistd.h>
 #include <assert.h>
@@ -32,7 +32,7 @@ int cu_rand_bytes(uint8_t *buf, size_t nbytes)
 	return getentropy(buf, nbytes);
 }
 
-#elif defined(CUTILS_HAVE_URANDOM)
+#elif defined(CU_HAVE_URANDOM)
 #include <assert.h>
 #include <unistd.h>
 #include <fcntl.h>
@@ -75,7 +75,7 @@ int cu_rand_bytes(uint8_t *buf, size_t nbytes)
 	}
 	return -1;
 }
-#elif defined(CUTILS_HAVE_BCRYPT)
+#elif defined(CU_HAVE_BCRYPT)
 
 #include <assert.h>
 

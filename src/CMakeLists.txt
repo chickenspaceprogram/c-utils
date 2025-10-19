@@ -6,37 +6,20 @@
 
 cmake_minimum_required(VERSION 3.25)
 
-if (C_UTILS_NONPORTABLE)
-	set(C_UTILS_NONPORTABLE_FILES
-		nonport_include/cu/hashmap.h
-		nonport_include/cu/minheap.h
-		nonport_include/cu/arena.h
-		arena.c # ms doesn't support max_align_t for some unknown reason ;-;
-	)
-endif()
-
 add_library(CUtils STATIC
-	alloc.c
 	allocators.c
-	sync.c
+	alloc.c
+	arena.c
 	rand.c
-	tblhash.c
-	include/cu/alloc.h
+	siphash.c
 	include/cu/allocators.h
-	include/cu/deque.h
-	include/cu/intmanip.h
-	include/cu/vector.h
-	include/cu/sync.h
-	include/cu/tblhash.h
+	include/cu/alloc.h
+	include/cu/arena.h
+	include/cu/dbgassert.h
 	include/cu/rand.h
-	${C_UTILS_NONPORTABLE_FILES}
+	include/cu/siphash.h
 )
 target_include_directories(CUtils PUBLIC include)
-
-if (C_UTILS_NONPORTABLE)
-	target_include_directories(CUtils PUBLIC nonport_include)
-	target_compile_definitions(CUtils PUBLIC CU_NONPORTABLE)
-endif()
 
 include(CheckSymbolExists)
 check_symbol_exists("memset_explicit" "string.h" HAVE_MEMSET_EXPLICIT)
@@ -60,69 +43,27 @@ if(HAVE_MEMSET_S)
 	target_compile_definitions(CUtils PRIVATE CU_HAVE_MEMSET_S)
 endif()
 
-try_compile(HAVE_TYPEOF SOURCES "${PROJECT_SOURCE_DIR}/src/typeof_test.c" COMPILE_DEFINITIONS "-DCU_TYPEOF=typeof" C_STANDARD 23)
-try_compile(HAVE_DUNDER_TYPEOF SOURCES "${PROJECT_SOURCE_DIR}/src/typeof_test.c" COMPILE_DEFINITIONS "-DCU_TYPEOF=__typeof__" C_STANDARD 23)
-if (HAVE_TYPEOF)
-	target_compile_definitions(CUtils PUBLIC CU_TYPEOF=typeof)
-elseif(HAVE_DUNDER_TYPEOF)
-	target_compile_definitions(CUtils PUBLIC CU_TYPEOF=__typeof__)
-else()
-	message(SEND_ERROR "c-utils requires typeof() to compile")
-endif()
-
-include(CheckIncludeFile)
-check_include_file(threads.h HAVE_THREADS_H)
-
-check_symbol_exists("__STDC_NO_THREADS__" "threads.h" NO_C11_THREADS)
-check_symbol_exists("pthread_mutex_timedlock" "pthread.h" HAVE_PTHREAD_MUTEX_TIMEDLOCK)
-
-find_package(Threads)
-if (Threads_FOUND AND CMAKE_USE_PTHREADS_INIT)
-	set(CUTILS_HAVE_PTHREADS ON)
-	target_link_libraries(CUtils PUBLIC Threads::Threads)
-endif()
-
-if(HAVE_THREADS_H AND NOT NO_C11_THREADS)
-	set(CUTILS_HAVE_C11_THREADS ON)
-endif()
-
-if(NOT CUTILS_HAVE_C11_THREADS AND NOT CUTILS_HAVE_PTHREADS)
-	message(SEND_ERROR "c-utils requires either C11 or POSIX threads; your system has neither")
-endif()
-
-if(CUTILS_HAVE_C11_THREADS)
-	target_compile_definitions(CUtils PUBLIC CUTILS_HAVE_C11_THREADS)
-endif()
-
-if(CUTILS_HAVE_PTHREADS)
-	target_compile_definitions(CUtils PUBLIC CUTILS_HAVE_PTHREADS)
-endif()
-
-if(HAVE_PTHREAD_MUTEX_TIMEDLOCK)
-	target_compile_definitions(CUtils PUBLIC CUTILS_HAVE_PTHREAD_MUTEX_TIMEDLOCK)
-endif()
-
 if (EXISTS "/dev/urandom")
 	target_compile_definitions(CUtils PRIVATE CUTILS_HAVE_URANDOM)
 endif()
-
 check_symbol_exists("getentropy" "unistd.h" HAVE_GETENTROPY)
+check_symbol_exists("arc4random_buf" "stdlib.h" HAVE_ARC4RANDOM)
+
 if (HAVE_GETENTROPY)
-	target_compile_definitions(CUtils PRIVATE CUTILS_HAVE_GETENTROPY)
+	target_compile_definitions(CUtils PRIVATE CU_HAVE_GETENTROPY)
 endif()
 
-check_symbol_exists("arc4random_buf" "stdlib.h" HAVE_ARC4RANDOM)
 if (HAVE_ARC4RANDOM)
-	target_compile_definitions(CUtils PRIVATE CUTILS_HAVE_ARC4RANDOM)
+	target_compile_definitions(CUtils PRIVATE CU_HAVE_ARC4RANDOM)
 endif()
 
 if (WIN32)
-	target_compile_definitions(CUtils PRIVATE CUTILS_HAVE_BCRYPT)
+	target_compile_definitions(CUtils PRIVATE CU_HAVE_BCRYPT)
 	target_link_libraries(CUtils PRIVATE bcrypt)
 endif()
 
 if (NOT HAVE_URANDOM AND NOT HAVE_GETENTROPY AND NOT HAVE_ARC4RANDOM AND NOT WIN32)
-message(FATAL_ERROR "Failed to find a suitable random number generation library.")
+	message(FATAL_ERROR "Failed to find a suitable random number generation library.")
 endif() 
 
 

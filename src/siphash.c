@@ -4,7 +4,7 @@
 
 // SPDX-License-Identifier: MPL-2.0
 
-#include <cu/tblhash.h>
+#include <cu/siphash.h>
 #include <cu/rand.h>
 #include <assert.h>
 #include <limits.h>
