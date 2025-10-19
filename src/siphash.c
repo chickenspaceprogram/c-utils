@@ -30,19 +30,19 @@ const uint64_t SIPHASH_CONSTS[4] = {
 static_assert(sizeof(uint64_t) == 8, "uint64_t is not 8 bytes");
 static_assert(CHAR_BIT == 8, "CHAR_BIT is not 8 bits");
 
-int cu_tblhash_init(cu_tblhash_key *key)
+int cu_siphash_init(cu_siphash_key *key)
 {
-	return cu_rand_bytes((uint8_t *)key, CU_TBLHASH_KEYSIZE);
+	return cu_rand_bytes((uint8_t *)key, CU_SIPHASH_KEYSIZE);
 }
 
-void cu_tblhash_init_from_bytes(cu_tblhash_key *key, uint8_t *bytes)
+void cu_siphash_init_from_bytes(cu_siphash_key *key, uint8_t *bytes)
 {
-	memcpy(key, bytes, CU_TBLHASH_KEYSIZE);
+	memcpy(key, bytes, CU_SIPHASH_KEYSIZE);
 }
 
 static void get_state(
 	uint64_t *state,
-	const cu_tblhash_key *key
+	const cu_siphash_key *key
 ) {
 	state[0] = SIPHASH_CONSTS[0] ^ key->key[0];
 	state[1] = SIPHASH_CONSTS[1] ^ key->key[1];
@@ -114,8 +114,8 @@ static inline uint64_t get_last(const uint8_t *buf, size_t len)
 	return val;
 }
 
-uint64_t cu_tblhash_hash(
-	const cu_tblhash_key *key,
+uint64_t cu_siphash_hash(
+	const cu_siphash_key *key,
 	const uint8_t *buf,
 	size_t size
 ) {

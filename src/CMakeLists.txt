@@ -14,8 +14,10 @@ add_library(CUtils STATIC
 	include/cu/alloc.h
 	include/cu/arena.h
 	include/cu/dbgassert.h
+	include/cu/hashmap.h
 	include/cu/rand.h
 	include/cu/siphash.h
+	include/cu/string.h
 )
 target_include_directories(CUtils PUBLIC include)
 

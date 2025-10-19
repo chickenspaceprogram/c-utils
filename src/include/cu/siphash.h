@@ -23,11 +23,11 @@
 
 typedef struct {
 	uint64_t key[2];
-} cu_tblhash_key;
+} cu_siphash_key;
 
-#define CU_TBLHASH_KEYSIZE sizeof(cu_tblhash_key)
+#define CU_SIPHASH_KEYSIZE sizeof(cu_siphash_key)
 
-// Initializes a `cu_tblhash_key` with cryptographically-secure random bytes.
+// Initializes a `cu_siphash_key` with cryptographically-secure random bytes.
 //
 // The bytes are retrieved from your system's randomness source.
 //
@@ -35,31 +35,32 @@ typedef struct {
 // backends as it does not attempt to buffer random bits or seed a global
 // random number generator.
 //
-// As such, it is also valid to initialize a `cu_tblhash_key` yourself with
+// As such, it is also valid to initialize a `cu_siphash_key` yourself with
 // cryptographically-secure random bytes from another source.
-// Use the `cu_tblhash_init_from_bytes' function to do this.
+// Use the `cu_siphash_init_from_bytes' function to do this.
 //
 // Returns 0 on success, -1 on failure
-int cu_tblhash_init(cu_tblhash_key *key);
+int cu_siphash_init(cu_siphash_key *key);
 
 
-// Initializes a `cu_tblhash_key` with cryptographically-secure random bytes.
+// Initializes a `cu_siphash_key` with cryptographically-secure random bytes.
 //
 // The bytes are provided by the user. There must be at least
-// `CU_TBLHASH_KEYSIZE' bytes.
+// `CU_SIPHASH_KEYSIZE' bytes.
 //
-// If you don't wish to provide random bytes, `cu_tblhash_init' will obtain
+// If you don't wish to provide random bytes, `cu_siphash_init' will obtain
 // them from the system randomness source automatically.
 //
 // This API is provided in cases where it is convenient or more performant
 // to initialize the key from a different randomness source, such as a
 // userspace CSPRNG, or a buffer of already-obtained random bytes from the
 // system.
-void cu_tblhash_init_from_bytes(cu_tblhash_key *key, uint8_t *bytes);
+void cu_siphash_init_from_bytes(cu_siphash_key *key, uint8_t *bytes);
 
 // Always succeeds
-uint64_t cu_tblhash_hash(
-	const cu_tblhash_key *key,
+uint64_t cu_siphash_hash(
+	const cu_siphash_key *key,
 	const uint8_t *buf,
 	size_t size
 );
+
