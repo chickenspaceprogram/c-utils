@@ -11,6 +11,7 @@ add_library(CUtils STATIC
 	arena.c
 	rand.c
 	siphash.c
+	hashmap.c
 	include/cu/alloc.h
 	include/cu/arena.h
 	include/cu/dbgassert.h

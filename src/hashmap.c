@@ -1,7 +1,6 @@
 #include <cu/hashmap.h>
 #include <assert.h>
 #define FILL_FACTOR 2
-#define GROW_FACTOR (2 * FILL_FACTOR)
 #define MIN_CAPACITY 16
 
 static inline uint64_t next_pwr_2(uint64_t val)
@@ -33,7 +32,7 @@ void cu_hashmap_free(cu_hashmap *map)
 
 static cu_hashmap_bucket *cu_hashmap_find_bucket(cu_hashmap *map, cu_string_view str)
 {
-	if (map->nel == 0)
+	if (map->capacity == 0)
 		return NULL;
 
 	uint64_t index = cu_strhash(str, &map->key) & (map->capacity - 1);
@@ -75,7 +74,7 @@ int cu_hashmap_reserve(cu_hashmap *map, uint64_t nel)
 	if (nel <= map->capacity / FILL_FACTOR) {
 		return 0;
 	}
-	uint64_t new_capacity = next_pwr_2(nel * GROW_FACTOR);
+	uint64_t new_capacity = next_pwr_2(nel * FILL_FACTOR);
 	if (map->capacity == 0 && new_capacity < MIN_CAPACITY)
 		new_capacity = MIN_CAPACITY;
 	
@@ -119,7 +118,7 @@ cu_hashmap_bucket *cu_hashmap_next(cu_hashmap_iter *iter)
 		cu_hashmap_bucket *elem = iter->hmap->arr + iter->index;
 		++iter->index;
 		if (elem->key.buf != NULL)
-			return iter->hmap->arr + iter->index;
+			return elem;
 	}
 	return NULL;
 }
