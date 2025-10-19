@@ -7,12 +7,10 @@
 cmake_minimum_required(VERSION 3.25)
 
 add_library(CUtils STATIC
-	allocators.c
 	alloc.c
 	arena.c
 	rand.c
 	siphash.c
-	include/cu/allocators.h
 	include/cu/alloc.h
 	include/cu/arena.h
 	include/cu/dbgassert.h

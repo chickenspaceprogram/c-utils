@@ -10,7 +10,7 @@
 #include <stdint.h>
 #include <cu/alloc.h>
 
-void *cu_allocator_alloc(size_t memsize, struct cu_allocator *alloc)
+void *cu_malloc(size_t memsize, cu_alloc *alloc)
 {
 	if (alloc == NULL)
 		return malloc(memsize);
@@ -18,7 +18,7 @@ void *cu_allocator_alloc(size_t memsize, struct cu_allocator *alloc)
 	return alloc->alloc(memsize, alloc->ctx);
 }
 
-void cu_allocator_free(void *mem, size_t memsize, struct cu_allocator *alloc)
+void cu_free(void *mem, size_t memsize, cu_alloc *alloc)
 {
 	if (alloc == NULL) {
 		free(mem);
@@ -30,7 +30,7 @@ void cu_allocator_free(void *mem, size_t memsize, struct cu_allocator *alloc)
 }
 
 
-void *cu_allocator_realloc(void *mem, size_t newsize, size_t oldsize, struct cu_allocator *alloc)
+void *cu_realloc(void *mem, size_t newsize, size_t oldsize, cu_alloc *alloc)
 {
 	if (alloc == NULL)
 		return realloc(mem, newsize);
@@ -41,15 +41,15 @@ void *cu_allocator_realloc(void *mem, size_t newsize, size_t oldsize, struct cu_
 			return NULL;
 		}
 		memcpy(newbuf, mem, oldsize);
-		cu_allocator_free(mem, oldsize, alloc);
+		cu_free(mem, oldsize, alloc);
 		return newbuf;
 	}
 	return alloc->realloc(mem, newsize, oldsize, alloc->ctx);
 }
 
-int cu_allocator_try_realloc(void **mem, size_t newsize, size_t oldsize, struct cu_allocator *alloc)
+int cu_try_realloc(void **mem, size_t newsize, size_t oldsize, cu_alloc *alloc)
 {
-	void *newptr = cu_allocator_realloc(*mem, newsize, oldsize, alloc);
+	void *newptr = cu_realloc(*mem, newsize, oldsize, alloc);
 	if (newptr == NULL)
 		return -1;
 	*mem = newptr;
@@ -66,17 +66,17 @@ static bool check_mult_overflow(size_t n1, size_t n2)
 	return false;
 }
 
-void *cu_allocator_reallocarray(void *mem, size_t new_nel, size_t old_nel, size_t elem_size, struct cu_allocator *alloc)
+void *cu_reallocarray(void *mem, size_t new_nel, size_t old_nel, size_t elem_size, cu_alloc *alloc)
 {
 	if (check_mult_overflow(new_nel, elem_size)) {
 		return NULL;
 	}
-	return cu_allocator_realloc(mem, new_nel * elem_size, old_nel * elem_size, alloc);
+	return cu_realloc(mem, new_nel * elem_size, old_nel * elem_size, alloc);
 }
 
-int cu_allocator_try_reallocarray(void **mem, size_t new_nel, size_t old_nel, size_t elem_size, struct cu_allocator *alloc)
+int cu_try_reallocarray(void **mem, size_t new_nel, size_t old_nel, size_t elem_size, cu_alloc *alloc)
 {
-	void *newptr = cu_allocator_reallocarray(*mem, new_nel, old_nel, elem_size, alloc);
+	void *newptr = cu_reallocarray(*mem, new_nel, old_nel, elem_size, alloc);
 	if (newptr == NULL)
 		return -1;
 	*mem = newptr;

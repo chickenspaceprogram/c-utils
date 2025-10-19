@@ -9,13 +9,13 @@
 #include <stdalign.h>
 #include <cu/alloc.h>
 
-struct cu_arena;
-struct cu_arena_dyn;
+typedef struct cu_arena_fixed cu_arena_fixed;
+typedef struct cu_arena cu_arena;
 
-struct cu_arena *cu_arena_new(size_t arena_size, struct cu_allocator *alloc);
+cu_arena_fixed *cu_arena_fixed_new(size_t arena_size, cu_alloc *alloc);
 // Allocates `amt` bytes of memory with an alignment of `align`.
 // `align` must be a power of two.
-void *cu_arena_aligned_alloc(size_t amt, size_t align, struct cu_arena *arena);
+void *cu_arena_fixed_aligned_alloc(size_t amt, size_t align, cu_arena_fixed *arena);
 
 // Only valid when allocating space for types with "fundamental alignment" as
 // defined by the C standard! (malloc also has this limitation)
@@ -32,23 +32,23 @@ void *cu_arena_aligned_alloc(size_t amt, size_t align, struct cu_arena *arena);
 //
 // cu_arena_aligned_alloc is also beneficial if you need to allocate multiple
 // types with small alignments consecutive to each other.
-static inline void *cu_arena_alloc(size_t amt, struct cu_arena *arena)
+static inline void *cu_arena_fixed_alloc(size_t amt, cu_arena_fixed *arena)
+{
+	return cu_arena_fixed_aligned_alloc(amt, alignof(max_align_t), arena);
+}
+void cu_arena_fixed_free(cu_arena_fixed *arena, cu_alloc *alloc);
+
+void cu_arena_fixed_cast(cu_alloc *alloc, cu_arena_fixed *arena);
+
+
+
+cu_arena *cu_arena_new(size_t arena_size, cu_alloc *alloc);
+void *cu_arena_aligned_alloc(size_t amt, size_t align, cu_arena *arena);
+static inline void *cu_arena_alloc(size_t amt, cu_arena *arena)
 {
 	return cu_arena_aligned_alloc(amt, alignof(max_align_t), arena);
 }
-void cu_arena_free(struct cu_arena *arena, struct cu_allocator *alloc);
+void cu_arena_free(cu_arena *arena);
 
-void cu_arena_cast(struct cu_allocator *alloc, struct cu_arena *arena);
-
-
-
-struct cu_arena_dyn *cu_arena_dyn_new(size_t arena_size, struct cu_allocator *alloc);
-void *cu_arena_dyn_aligned_alloc(size_t amt, size_t align, struct cu_arena_dyn *arena);
-static inline void *cu_arena_dyn_alloc(size_t amt, struct cu_arena_dyn *arena)
-{
-	return cu_arena_dyn_aligned_alloc(amt, alignof(max_align_t), arena);
-}
-void cu_arena_dyn_free(struct cu_arena_dyn *arena);
-
-void cu_arena_dyn_cast(struct cu_allocator *alloc, struct cu_arena_dyn *arena);
+void cu_arena_cast(cu_alloc *alloc, cu_arena *arena);
 

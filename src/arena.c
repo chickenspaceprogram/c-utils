@@ -10,18 +10,18 @@
 
 #define IS_PWR_2(V) ((V) && !((V) & ((V) - 1)))
 
-struct cu_arena {
+typedef struct cu_arena_fixed {
 	size_t bufsize;
 	size_t index;
 	alignas(alignof(max_align_t)) uint8_t buf[];
-};
-struct cu_arena_dyn {
+} cu_arena_fixed;
+typedef struct cu_arena {
 	struct cu_arena_elem *first;
-	struct cu_allocator *alloc;
+	cu_alloc *alloc;
 	size_t default_block_size;
 	size_t index;
 	alignas(alignof(max_align_t)) uint8_t buf[];
-};
+} cu_arena;
 struct cu_arena_elem {
 	size_t bufsize;
 	size_t index;
@@ -29,8 +29,8 @@ struct cu_arena_elem {
 	alignas(alignof(max_align_t)) uint8_t buf[];
 };
 
-static_assert(alignof(struct cu_arena) <= alignof(max_align_t), "Your platform aligns structs weirdly.");
-static_assert(alignof(struct cu_arena_dyn) <= alignof(max_align_t), "Your platform aligns structs weirdly.");
+static_assert(alignof(cu_arena_fixed) <= alignof(max_align_t), "Your platform aligns structs weirdly.");
+static_assert(alignof(cu_arena) <= alignof(max_align_t), "Your platform aligns structs weirdly.");
 static_assert(alignof(struct cu_arena_elem) <= alignof(max_align_t), "Your platform aligns structs weirdly.");
 
 static size_t align_index(uintptr_t baseptr, size_t cur_index, size_t align)
@@ -44,9 +44,9 @@ static size_t align_index(uintptr_t baseptr, size_t cur_index, size_t align)
 	return cur_index + extra;
 }
 
-struct cu_arena *cu_arena_new(size_t arena_size, struct cu_allocator *alloc)
+cu_arena_fixed *cu_arena_fixed_new(size_t arena_size, cu_alloc *alloc)
 {
-	struct cu_arena *arena = cu_allocator_alloc(sizeof(struct cu_arena) + arena_size, alloc);
+	cu_arena_fixed *arena = cu_malloc(sizeof(struct cu_arena) + arena_size, alloc);
 	if (arena == NULL)
 		return NULL;
 	arena->bufsize = arena_size;
@@ -54,7 +54,7 @@ struct cu_arena *cu_arena_new(size_t arena_size, struct cu_allocator *alloc)
 	return arena;
 }
 
-void *cu_arena_aligned_alloc(size_t amt, size_t align, struct cu_arena *arena)
+void *cu_arena_fixed_aligned_alloc(size_t amt, size_t align, cu_arena_fixed *arena)
 {
 	assert(IS_PWR_2(align));
 	size_t base_index = align_index((uintptr_t)arena->buf, arena->index, align);
@@ -66,18 +66,18 @@ void *cu_arena_aligned_alloc(size_t amt, size_t align, struct cu_arena *arena)
 	return elem;
 }
 
-void cu_arena_free(struct cu_arena *arena, struct cu_allocator *alloc)
+void cu_arena_fixed_free(cu_arena_fixed *arena, cu_alloc *alloc)
 {
-	cu_allocator_free(arena, arena->bufsize + sizeof(struct cu_arena), alloc);
+	cu_free(arena, arena->bufsize + sizeof(struct cu_arena), alloc);
 }
 
 static void *arena_allocator_alloc(size_t amount, void *ctx)
 {
-	struct cu_arena *arena = ctx;
-	return cu_arena_alloc(amount, arena);
+	cu_arena_fixed *arena = ctx;
+	return cu_arena_fixed_alloc(amount, arena);
 }
 
-void cu_arena_cast(struct cu_allocator *alloc, struct cu_arena *arena)
+void cu_arena_fixed_cast(cu_alloc *alloc, cu_arena_fixed *arena)
 {
 	alloc->alloc = arena_allocator_alloc;
 	alloc->free = NULL;
@@ -85,11 +85,11 @@ void cu_arena_cast(struct cu_allocator *alloc, struct cu_arena *arena)
 	alloc->ctx = arena;
 }
 
-struct cu_arena_dyn *cu_arena_dyn_new(size_t block_size, struct cu_allocator *alloc)
+cu_arena *cu_arena_new(size_t block_size, cu_alloc *alloc)
 {
 	if (block_size < alignof(max_align_t))
 		block_size = alignof(max_align_t);
-	struct cu_arena_dyn *arena = cu_allocator_alloc(sizeof(struct cu_arena_dyn) + block_size, alloc);
+	cu_arena *arena = cu_malloc(sizeof(cu_arena) + block_size, alloc);
 	if (arena == NULL)
 		return NULL;
 	arena->default_block_size = block_size;
@@ -105,11 +105,11 @@ static size_t max_reqd_size(size_t amt, size_t align)
 		return amt;
 	return amt + align - alignof(max_align_t);
 }
-void *cu_arena_dyn_aligned_alloc(size_t amt, size_t align, struct cu_arena_dyn *arena)
+void *cu_arena_aligned_alloc(size_t amt, size_t align, cu_arena *arena)
 {
 	size_t reqd_size = max_reqd_size(amt, align);
 	if (reqd_size > arena->default_block_size) {
-		struct cu_arena_elem *new_block = cu_allocator_alloc(reqd_size + sizeof(struct cu_arena_elem), arena->alloc);
+		struct cu_arena_elem *new_block = cu_malloc(reqd_size + sizeof(struct cu_arena_elem), arena->alloc);
 		if (new_block == NULL)
 			return NULL;
 
@@ -136,7 +136,7 @@ void *cu_arena_dyn_aligned_alloc(size_t amt, size_t align, struct cu_arena_dyn *
 		}
 		elem = elem->next;
 	}
-	struct cu_arena_elem *new_first = cu_allocator_alloc(sizeof(struct cu_arena_elem) + arena->default_block_size, arena->alloc);
+	struct cu_arena_elem *new_first = cu_malloc(sizeof(struct cu_arena_elem) + arena->default_block_size, arena->alloc);
 	if (new_first == NULL)
 		return NULL;
 	new_first->bufsize = arena->default_block_size;
@@ -147,26 +147,26 @@ void *cu_arena_dyn_aligned_alloc(size_t amt, size_t align, struct cu_arena_dyn *
 	arena->first = new_first;
 	return retval;
 }
-void cu_arena_dyn_free(struct cu_arena_dyn *arena)
+void cu_arena_free(cu_arena *arena)
 {
 	struct cu_arena_elem *elem = arena->first;
 	while (elem != NULL) {
 		struct cu_arena_elem *tmp = elem;
 		elem = elem->next;
-		cu_allocator_free(tmp, sizeof(struct cu_arena_elem) + tmp->bufsize, arena->alloc);
+		cu_free(tmp, sizeof(struct cu_arena_elem) + tmp->bufsize, arena->alloc);
 	}
-	cu_allocator_free(arena, sizeof(struct cu_arena_dyn) + arena->default_block_size, arena->alloc);
+	cu_free(arena, sizeof(cu_arena) + arena->default_block_size, arena->alloc);
 }
 
-static void *arena_dyn_alloc(size_t amount, void *ctx)
+static void *arena_alloc(size_t amount, void *ctx)
 {
-	struct cu_arena_dyn *arena = ctx;
-	return cu_arena_dyn_alloc(amount, arena);
+	cu_arena *arena = ctx;
+	return cu_arena_alloc(amount, arena);
 }
 
-void cu_arena_dyn_cast(struct cu_allocator *alloc, struct cu_arena_dyn *arena)
+void cu_arena_cast(cu_alloc *alloc, cu_arena *arena)
 {
-	alloc->alloc = arena_dyn_alloc;
+	alloc->alloc = arena_alloc;
 	alloc->free = NULL;
 	alloc->realloc = NULL;
 	alloc->ctx = arena;

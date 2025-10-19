@@ -11,7 +11,7 @@
 // A struct defining a generic allocator.
 // You aren't intended to call these function pointers directly from other code;
 // instead, check out the cu_allocator_* functions down below.
-struct cu_allocator {
+typedef struct {
 	// Required function!
 	// If you set alloc == NULL you'll get a segfault.
 	//
@@ -45,7 +45,7 @@ struct cu_allocator {
 	void *(*realloc)(void *mem, size_t newsize, size_t oldsize, void *ctx);
 
 	void *ctx; // passed into all functions
-};
+} cu_alloc;
 
 
 // Generic functions
@@ -53,64 +53,64 @@ struct cu_allocator {
 
 // Allocates `memsize` bytes of memory on the heap using `alloc`, and returns
 // a pointer to it.
-void *cu_allocator_alloc(size_t memsize, struct cu_allocator *alloc);
+void *cu_malloc(size_t memsize, cu_alloc *alloc);
 
 // Frees the heap-allocated memory at `mem` with the allocator `alloc`. 
 // The size of the memory at `mem` is `memsize`. 
-void cu_allocator_free(void *mem, size_t memsize, struct cu_allocator *alloc);
+void cu_free(void *mem, size_t memsize, cu_alloc *alloc);
 
 // Extends the size of the memory allocated at `mem`.
 // This either happens in the cu_allocator's callbacks
 // (if alloc->realloc != NULL), or this function just 
 // allocates a new block of memory, memcpy's data over,
 // and frees the old one.
-void *cu_allocator_realloc(void *mem, size_t newsize, size_t oldsize, struct cu_allocator *alloc);
+void *cu_realloc(void *mem, size_t newsize, size_t oldsize, cu_alloc *alloc);
 
 // Sets *mem to the newly-allocated pointer if allocation succeeds, does
 // nothing when allocation fails.
 //
 // On success, returns 0.
 // On failure, returns -1.
-int cu_allocator_try_realloc(void **mem, size_t newsize, size_t oldsize, struct cu_allocator *alloc);
+int cu_try_realloc(void **mem, size_t newsize, size_t oldsize, cu_alloc *alloc);
 
 // Allocates a new array of `nel` elements, each `elem_size` in size, using
 // the allocator `alloc`.
 //
 // This function is provided because it's convenient.
-inline static void *cu_allocator_allocarray(size_t nel, size_t elemsize, struct cu_allocator *alloc)
+inline static void *cu_allocarray(size_t nel, size_t elemsize, cu_alloc *alloc)
 {
-	return cu_allocator_alloc(nel * elemsize, alloc);
+	return cu_malloc(nel * elemsize, alloc);
 }
 
 // Frees an array of `nel` elements located at `mem` with the allocator `alloc`.
 // Each element is `elemsize` bytes in size.
-inline static void cu_allocator_freearray(void *mem, size_t nel, size_t elemsize, struct cu_allocator *alloc)
+inline static void cu_freearray(void *mem, size_t nel, size_t elemsize, cu_alloc *alloc)
 {
-	cu_allocator_free(mem, nel * elemsize, alloc);
+	cu_free(mem, nel * elemsize, alloc);
 }
 
 // realloc()'s an array of elements.
 //
 // This checks for integer overflow, similar to Linux's reallocarray(),
 // and fails in that case.
-void *cu_allocator_reallocarray(void *mem, size_t new_nel, size_t old_nel, size_t elem_size, struct cu_allocator *alloc);
+void *cu_reallocarray(void *mem, size_t new_nel, size_t old_nel, size_t elem_size, cu_alloc *alloc);
 
 // Sets *mem to the newly-allocated pointer if allocation succeeds, does
 // nothing when allocation fails.
 //
 // On success, returns 0.
 // On failure, returns -1.
-int cu_allocator_try_reallocarray(void **mem, size_t new_nel, size_t old_nel, size_t elem_size, struct cu_allocator *alloc);
+int cu_try_reallocarray(void **mem, size_t new_nel, size_t old_nel, size_t elem_size, cu_alloc *alloc);
 
 // Attempts to call cu_allocator_realloc() on its arguments.
 // If cu_allocator_realloc() fails, the pointer gets freed automatically.
 //
 // This function is present in FreeBSD and it's convenient sometimes.
-inline static void *cu_allocator_reallocf(void *mem, size_t newsize, size_t oldsize, struct cu_allocator *alloc)
+inline static void *cu_reallocf(void *mem, size_t newsize, size_t oldsize, cu_alloc *alloc)
 {
-	void *result = cu_allocator_realloc(mem, newsize, oldsize, alloc);
+	void *result = cu_realloc(mem, newsize, oldsize, alloc);
 	if (result == NULL) {
-		cu_allocator_free(mem, oldsize, alloc);
+		cu_free(mem, oldsize, alloc);
 		return NULL;
 	}
 	return result;
