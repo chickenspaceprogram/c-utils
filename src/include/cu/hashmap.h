@@ -9,7 +9,7 @@
 // probing.
 
 typedef struct {
-	cu_string_view key;
+	cu_str key;
 	void *value;
 } cu_hashmap_bucket;
 
@@ -29,12 +29,12 @@ typedef struct {
 int cu_hashmap_new(cu_hashmap *map, cu_alloc *alloc);
 void cu_hashmap_free(cu_hashmap *map);
 
-void *cu_hashmap_at(cu_hashmap *map, cu_string_view key);
-static inline bool cu_hashmap_contains(cu_hashmap *map, cu_string_view key)
+void *cu_hashmap_at(cu_hashmap *map, cu_str key);
+static inline bool cu_hashmap_contains(cu_hashmap *map, cu_str key)
 {
 	return cu_hashmap_at(map, key) != NULL;
 }
-int cu_hashmap_insert(cu_hashmap *map, cu_string_view key, void *value);
+int cu_hashmap_insert(cu_hashmap *map, cu_str key, void *value);
 int cu_hashmap_reserve(cu_hashmap *map, uint64_t nel);
 
 static inline cu_hashmap_iter cu_hashmap_begin(cu_hashmap *map)

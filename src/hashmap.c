@@ -30,7 +30,7 @@ void cu_hashmap_free(cu_hashmap *map)
 	cu_freearray(map->arr, map->nel, sizeof(cu_hashmap_bucket), map->alloc);
 }
 
-static cu_hashmap_bucket *cu_hashmap_find_bucket(cu_hashmap *map, cu_string_view str)
+static cu_hashmap_bucket *cu_hashmap_find_bucket(cu_hashmap *map, cu_str str)
 {
 	if (map->capacity == 0)
 		return NULL;
@@ -47,7 +47,7 @@ static cu_hashmap_bucket *cu_hashmap_find_bucket(cu_hashmap *map, cu_string_view
 	}
 }
 
-void *cu_hashmap_at(cu_hashmap *map, cu_string_view key)
+void *cu_hashmap_at(cu_hashmap *map, cu_str key)
 {
 	cu_hashmap_bucket *el = cu_hashmap_find_bucket(map, key);
 	if (el == NULL)
@@ -61,7 +61,7 @@ void *cu_hashmap_at(cu_hashmap *map, cu_string_view key)
 }
 
 
-void cu_hashmap_insert_unsafe(cu_hashmap *map, cu_string_view key, void *value)
+void cu_hashmap_insert_unsafe(cu_hashmap *map, cu_str key, void *value)
 {
 	cu_hashmap_bucket *bucket = cu_hashmap_find_bucket(map, key);
 	bucket->key = key;
@@ -100,7 +100,7 @@ int cu_hashmap_reserve(cu_hashmap *map, uint64_t nel)
 	return 0;
 }
 
-int cu_hashmap_insert(cu_hashmap *map, cu_string_view key, void *value)
+int cu_hashmap_insert(cu_hashmap *map, cu_str key, void *value)
 {
 	if (cu_hashmap_reserve(map, map->nel + 1) != 0)
 		return -1;

@@ -48,7 +48,7 @@ static void test_hashmap(void)
 		"val15",
 		"val16",
 	};
-	cu_string_view keystr[16];
+	cu_str keystr[16];
 	for (size_t i = 0; i < 16; ++i) {
 		keystr[i] = cu_cstr_cast(keys[i]);
 	}
