@@ -2,6 +2,15 @@
 #include <assert.h>
 #define HASHLIST_SIZE_SHIFT 1
 
+
+static cu_cache_elem DELETED_ELEM_OBJ;
+
+// When elements are deleted, the pointer in the spot they occupied in the hashlist is set to this value
+// this guarantees a nonnull pointer that is still a testable value
+static cu_cache_elem *const DELETED_ELEM_FLAG = &DELETED_ELEM_OBJ;
+
+#define BILLION 1000000000
+
 static inline uint64_t next_pwr_2(uint64_t val)
 {
 	--val;
@@ -28,7 +37,7 @@ static cu_cache_elem **find_elem(cu_cache *cache, cu_str key)
 	uint64_t inc = 1;
 	while (true) {
 		assert(inc < hashlist_sz);
-		if (cache->ptr_hashlist[index] == NULL)
+		if (cache->ptr_hashlist[index] == NULL || cache->ptr_hashlist[index] == DELETED_ELEM_FLAG)
 			return cache->ptr_hashlist + index;
 
 	if (cu_streq(cache->ptr_hashlist[index]->key, key))
@@ -39,9 +48,72 @@ static cu_cache_elem **find_elem(cu_cache *cache, cu_str key)
 	}
 }
 
-static inline void delete_cache_entry(cu_cache_elem **entry);
-static struct timespec add_timespecs(struct timespec tm1, struct timespec tm2);
-static int cmp_timespecs(struct timespec tm1, struct timespec tm2);
+static inline uint64_t get_lchild(uint64_t parent)
+{
+	return parent * 2 + 1;
+}
+
+static inline uint64_t get_rchild(uint64_t parent)
+{
+	return parent * 2 + 2;
+}
+
+static inline uint64_t get_parent(uint64_t child)
+{
+	--child;
+	child -= child % 2;
+	return child / 2;
+}
+
+static inline void swap_with_parent(cu_cache *cache, uint64_t index)
+{
+	struct cu_cache_elem tmp = cache->elems_minheap[index];
+	uint64_t parent_ind = get_parent(index);
+	cache->elems_minheap[index] = cache->elems_minheap[parent_ind];
+	cache->elems_minheap[parent_ind] = tmp;
+
+	*(cache->elems_minheap[parent_ind].hashlist_entry) = cache->elems_minheap + parent_ind;
+	*(cache->elems_minheap[index].hashlist_entry) = cache->elems_minheap + index;
+}
+
+static inline void delete_top_entry(cu_cache *cache);
+
+static inline void delete_cache_entry(cu_cache *cache, uint64_t index)
+{
+	while (index > 0) {
+		swap_with_parent(cache, index);
+		index = get_parent(index);
+	}
+	delete_top_entry(cache);
+}
+
+static struct timespec add_timespecs(struct timespec tm1, struct timespec tm2)
+{
+	tm1.tv_sec += tm2.tv_sec;
+	uint32_t tm1_nsec = tm1.tv_nsec;
+	uint32_t tm2_nsec = tm1.tv_nsec;
+	uint32_t res_nsec = tm1_nsec + tm2_nsec;
+	if (res_nsec >= BILLION) {
+		res_nsec -= BILLION;
+		++tm1.tv_sec;
+	}
+	tm1.tv_nsec = res_nsec;
+	return tm1;
+}
+
+static int cmp_timespecs(struct timespec tm1, struct timespec tm2)
+{
+	if (tm1.tv_sec > tm2.tv_sec)
+		return 1;
+	if (tm1.tv_sec < tm2.tv_sec)
+		return -1;
+	
+	if (tm1.tv_nsec > tm2.tv_nsec)
+		return 1;
+	if (tm1.tv_nsec < tm2.tv_nsec)
+		return -1;
+	return 0;
+}
 
 int cu_cache_new(cu_cache *cache, size_t max_nel, cu_alloc *alloc)
 {
@@ -70,7 +142,7 @@ int cu_cache_new(cu_cache *cache, size_t max_nel, cu_alloc *alloc)
 const cu_str *cu_cache_search(cu_cache *cache, cu_str key)
 {
 	cu_cache_elem **el = find_elem(cache, key);
-	if (*el == NULL)
+	if (*el == NULL || *el == DELETED_ELEM_FLAG)
 		return NULL;
 	struct timespec cur_time;
 	int res = timespec_get(&cur_time, TIME_UTC);
@@ -78,7 +150,7 @@ const cu_str *cu_cache_search(cu_cache *cache, cu_str key)
 		return NULL;
 	struct timespec end_tm = add_timespecs((*el)->init_time, (*el)->max_alive_time);
 	if (cmp_timespecs(cur_time, end_tm) < 0) {
-		delete_cache_entry(el);
+		delete_cache_entry(cache, *el - cache->elems_minheap);
 		return NULL;
 	}
 	return &(*el)->val;

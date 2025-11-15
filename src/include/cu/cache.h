@@ -15,12 +15,14 @@
 // A simple cache, intended mostly to be paired with an HTTP server but generic
 // enough to be used in other places too.
 
-typedef struct cu_cache_elem {
+typedef struct cu_cache_elem cu_cache_elem;
+struct cu_cache_elem {
 	cu_str key;
 	cu_str val;
 	struct timespec init_time;
 	struct timespec max_alive_time;
-} cu_cache_elem;
+	cu_cache_elem **hashlist_entry;
+};
 
 typedef struct {
 	cu_cache_elem *elems_minheap;
