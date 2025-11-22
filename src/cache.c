@@ -2,6 +2,10 @@
 #include <assert.h>
 #define HASHLIST_SIZE_SHIFT 1
 
+// NEVER MIND FUCK MY LIFE I GUESS
+// I NEED TO MAKE THIS A LINKED LIST HASHMAP
+// BECAUSE IM GONNA BE ADDING AND REMOVING SHIT CONSTANTLY AND NEVER RESIZING
+// FJDSALFJSDL
 
 static cu_cache_elem DELETED_ELEM_OBJ;
 
@@ -29,20 +33,40 @@ static inline uint64_t get_hashlist_sz(uint64_t max_size)
 	return next_pwr_2(max_size) << HASHLIST_SIZE_SHIFT;
 }
 
-static cu_cache_elem **find_elem(cu_cache *cache, cu_str key)
+typedef struct cu_cache_searchres {
+	cu_cache_elem **item;
+	cu_cache_elem **fst_empty_spot;
+} cu_cache_searchres;
+
+cu_cache_elem **search_elem(cu_cache *cache, cu_str key)
 {
 	uint64_t hashlist_sz = get_hashlist_sz(cache->nel);
 	uint64_t hashval = cu_siphash_hash(&cache->hashkey, key.buf, key.len);
 	uint64_t index = hashval & (hashlist_sz - 1);
 	uint64_t inc = 1;
+	cu_cache_elem **fst_empty_spot = NULL;
 	while (true) {
 		assert(inc < hashlist_sz);
-		if (cache->ptr_hashlist[index] == NULL || cache->ptr_hashlist[index] == DELETED_ELEM_FLAG)
+		if (cache->ptr_hashlist[index] == NULL)
 			return cache->ptr_hashlist + index;
 
-	if (cu_streq(cache->ptr_hashlist[index]->key, key))
-			return cache->ptr_hashlist + index;
+		if (cache->ptr_hashlist[index] == DELETED_ELEM_FLAG) {
+			if (fst_empty_spot == NULL)
+				fst_empty_spot = cache->ptr_hashlist + index;
 
+			goto loopend;
+		}
+
+		if (cu_streq(cache->ptr_hashlist[index]->key, key)) {
+			if (fst_empty_spot == NULL)
+				return cache->ptr_hashlist + index;
+
+			*fst_empty_spot = cache->ptr_hashlist[index];
+			cache->ptr_hashlist[index] = DELETED_ELEM_FLAG;
+			return fst_empty_spot;
+		}
+
+		loopend:
 		index += inc++;
 		index &= (hashlist_sz - 1);
 	}
@@ -141,7 +165,15 @@ int cu_cache_new(cu_cache *cache, size_t max_nel, cu_alloc *alloc)
 
 const cu_str *cu_cache_search(cu_cache *cache, cu_str key)
 {
-	cu_cache_elem **el = find_elem(cache, key);
+	cu_cache_searchres res = find_elem(cache, key);
+	cu_cache_elem *elptr = NULL;
+	if (*res.item == NULL)
+		return NULL;
+	if (res.fst_empty_spot != NULL) {
+		*res.fst_empty_spot = *res.item;
+		*res.item = DELETED_ELEM_FLAG;
+		elptr = *res.fst_empty_spot;
+	}
 	if (*el == NULL || *el == DELETED_ELEM_FLAG)
 		return NULL;
 	struct timespec cur_time;

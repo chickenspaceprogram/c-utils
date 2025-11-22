@@ -8,3 +8,4 @@ build/
 build_sentinel
 *.swp
 .DS_Store
+.cache
