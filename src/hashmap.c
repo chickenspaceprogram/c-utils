@@ -16,7 +16,7 @@ static inline uint64_t next_pwr_2(uint64_t val)
 	return val;
 }
 
-int cu_hashmap_new(cu_hashmap *map, cu_alloc *alloc)
+int cu_hm_new(cu_hm *map, cu_alloc *alloc)
 {
 	map->arr = NULL;
 	map->capacity = 0;
@@ -25,12 +25,12 @@ int cu_hashmap_new(cu_hashmap *map, cu_alloc *alloc)
 	return cu_siphash_init(&map->key);
 
 }
-void cu_hashmap_free(cu_hashmap *map)
+void cu_hm_free(cu_hm *map)
 {
-	cu_freearray(map->arr, map->nel, sizeof(cu_hashmap_bucket), map->alloc);
+	cu_freearray(map->arr, map->nel, sizeof(cu_hm_bucket), map->alloc);
 }
 
-static cu_hashmap_bucket *cu_hashmap_find_bucket(cu_hashmap *map, cu_str str)
+static cu_hm_bucket *cu_hm_find_bucket(cu_hm *map, cu_str str)
 {
 	if (map->capacity == 0)
 		return NULL;
@@ -47,9 +47,9 @@ static cu_hashmap_bucket *cu_hashmap_find_bucket(cu_hashmap *map, cu_str str)
 	}
 }
 
-void *cu_hashmap_at(cu_hashmap *map, cu_str key)
+void *cu_hm_at(cu_hm *map, cu_str key)
 {
-	cu_hashmap_bucket *el = cu_hashmap_find_bucket(map, key);
+	cu_hm_bucket *el = cu_hm_find_bucket(map, key);
 	if (el == NULL)
 		return NULL;
 	
@@ -61,15 +61,15 @@ void *cu_hashmap_at(cu_hashmap *map, cu_str key)
 }
 
 
-void cu_hashmap_insert_unsafe(cu_hashmap *map, cu_str key, void *value)
+void cu_hm_insert_unsafe(cu_hm *map, cu_str key, void *value)
 {
-	cu_hashmap_bucket *bucket = cu_hashmap_find_bucket(map, key);
+	cu_hm_bucket *bucket = cu_hm_find_bucket(map, key);
 	bucket->key = key;
 	bucket->value = value;
 	++map->nel;
 }
 
-int cu_hashmap_reserve(cu_hashmap *map, uint64_t nel)
+int cu_hm_reserve(cu_hm *map, uint64_t nel)
 {
 	if (nel <= map->capacity / FILL_FACTOR) {
 		return 0;
@@ -78,8 +78,8 @@ int cu_hashmap_reserve(cu_hashmap *map, uint64_t nel)
 	if (map->capacity == 0 && new_capacity < MIN_CAPACITY)
 		new_capacity = MIN_CAPACITY;
 	
-	cu_hashmap new_map = {
-		.arr = cu_allocarray(new_capacity, sizeof(cu_hashmap_bucket), map->alloc),
+	cu_hm new_map = {
+		.arr = cu_allocarray(new_capacity, sizeof(cu_hm_bucket), map->alloc),
 		.capacity = new_capacity,
 		.nel = 0,
 		.alloc = map->alloc,
@@ -87,35 +87,35 @@ int cu_hashmap_reserve(cu_hashmap *map, uint64_t nel)
 	};
 	if (new_map.arr == NULL)
 		return -1;
-	memset(new_map.arr, 0, new_capacity * sizeof(cu_hashmap_bucket));
+	memset(new_map.arr, 0, new_capacity * sizeof(cu_hm_bucket));
 	
-	cu_hashmap_iter it = cu_hashmap_begin(map);
-	cu_hashmap_bucket *cur = NULL;
-	while ((cur = cu_hashmap_next(&it)) != NULL) {
-		cu_hashmap_insert_unsafe(&new_map, cur->key, cur->value);
+	cu_hm_iter it = cu_hm_begin(map);
+	cu_hm_bucket *cur = NULL;
+	while ((cur = cu_hm_next(&it)) != NULL) {
+		cu_hm_insert_unsafe(&new_map, cur->key, cur->value);
 	}
 
-	cu_freearray(map->arr, map->capacity, sizeof(cu_hashmap_bucket), map->alloc);
+	cu_freearray(map->arr, map->capacity, sizeof(cu_hm_bucket), map->alloc);
 	*map = new_map;
 	return 0;
 }
 
-int cu_hashmap_insert(cu_hashmap *map, cu_str key, void *value)
+int cu_hm_insert(cu_hm *map, cu_str key, void *value)
 {
-	if (cu_hashmap_reserve(map, map->nel + 1) != 0)
+	if (cu_hm_reserve(map, map->nel + 1) != 0)
 		return -1;
-	cu_hashmap_insert_unsafe(map, key, value);
+	cu_hm_insert_unsafe(map, key, value);
 	return 0;
 
 }
 
-cu_hashmap_bucket *cu_hashmap_next(cu_hashmap_iter *iter)
+cu_hm_bucket *cu_hm_next(cu_hm_iter *iter)
 {
 	if (iter->hmap->nel == 0) {
 		return NULL;
 	}
 	while (iter->index < iter->hmap->capacity) {
-		cu_hashmap_bucket *elem = iter->hmap->arr + iter->index;
+		cu_hm_bucket *elem = iter->hmap->arr + iter->index;
 		++iter->index;
 		if (elem->key.buf != NULL)
 			return elem;

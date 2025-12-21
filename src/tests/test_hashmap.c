@@ -52,23 +52,23 @@ static void test_hashmap(void)
 	for (size_t i = 0; i < 16; ++i) {
 		keystr[i] = cu_cstr_cast(keys[i]);
 	}
-	cu_hashmap hm;
-	int retval = cu_hashmap_new(&hm, NULL);
+	cu_hm hm;
+	int retval = cu_hm_new(&hm, NULL);
 	dbgassert(retval == 0);
 	for (int i = 0; i < 16; ++i) {
-		dbgassert(cu_hashmap_at(&hm, keystr[i]) == NULL);
+		dbgassert(cu_hm_at(&hm, keystr[i]) == NULL);
 	}
 	for (int i = 0; i < 16; ++i) {
-		dbgassert(cu_hashmap_insert(&hm, keystr[i], vals[i]) == 0);
+		dbgassert(cu_hm_insert(&hm, keystr[i], vals[i]) == 0);
 	}
 	for (int i = 0; i < 16; ++i) {
-		char *retstr = cu_hashmap_at(&hm, keystr[i]);
+		char *retstr = cu_hm_at(&hm, keystr[i]);
 		dbgassert(retstr != NULL);
 		dbgassert(strcmp(retstr, vals[i]) == 0);
 
 	}
-	dbgassert(cu_hashmap_at(&hm, cu_cstr_cast("asdf")) == NULL);
-	cu_hashmap_free(&hm);
+	dbgassert(cu_hm_at(&hm, cu_cstr_cast("asdf")) == NULL);
+	cu_hm_free(&hm);
 }
 
 int main(void)
