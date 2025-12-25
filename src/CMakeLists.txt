@@ -12,6 +12,7 @@ add_library(CUtils STATIC
 	rand.c
 	siphash.c
 	hashmap.c
+	bitmanip.c
 	include/cu/alloc.h
 	include/cu/arena.h
 	include/cu/dbgassert.h
@@ -19,6 +20,7 @@ add_library(CUtils STATIC
 	include/cu/rand.h
 	include/cu/siphash.h
 	include/cu/string.h
+	include/cu/bitmanip.h
 )
 target_include_directories(CUtils PUBLIC include)
 
@@ -27,6 +29,7 @@ check_symbol_exists("memset_explicit" "string.h" HAVE_MEMSET_EXPLICIT)
 check_symbol_exists("explicit_bzero" "string.h" HAVE_EXPLICIT_BZERO)
 check_symbol_exists("SecureZeroMemory" "Windows.h" HAVE_SECURE_ZERO_MEMORY)
 check_symbol_exists("memset_s" "string.h" HAVE_MEMSET_S)
+check_symbol_exists("stdc_bit_ceil" "stdbit.h" HAVE_STDC_BIT_CEIL)
 
 if(HAVE_MEMSET_EXPLICIT)
 	target_compile_definitions(CUtils PRIVATE CU_HAVE_MEMSET_EXPLICIT)
@@ -42,6 +45,10 @@ endif()
 
 if(HAVE_MEMSET_S)
 	target_compile_definitions(CUtils PRIVATE CU_HAVE_MEMSET_S)
+endif()
+
+if(HAVE_STDC_BIT_CEIL)
+	target_compile_definitions(CUtils PUBLIC CU_HAVE_STDBIT)
 endif()
 
 if (EXISTS "/dev/urandom")

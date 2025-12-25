@@ -10,18 +10,18 @@
 
 #define IS_PWR_2(V) ((V) && !((V) & ((V) - 1)))
 
-typedef struct cu_arena_fixed {
+struct cu_arena_fixed {
 	uint8_t *end;
 	uint8_t *bump;
 	alignas(alignof(max_align_t)) uint8_t start[];
-} cu_arena_fixed;
-typedef struct cu_arena {
+};
+struct cu_arena {
 	struct cu_arena_elem *first;
 	cu_alloc *alloc;
 	size_t default_block_size;
 	uint8_t *bump;
 	alignas(alignof(max_align_t)) uint8_t buf_start[];
-} cu_arena;
+};
 struct cu_arena_elem {
 	struct cu_arena_elem *next;
 	uint8_t *buf_end;
