@@ -9,6 +9,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <cu/alloc.h>
+#include <cu/bitmanip.h>
 
 void *cu_malloc(size_t memsize, cu_alloc *alloc)
 {
@@ -56,19 +57,10 @@ int cu_try_realloc(void **mem, size_t newsize, size_t oldsize, cu_alloc *alloc)
 	return 0;
 }
 
-static bool check_mult_overflow(size_t n1, size_t n2)
-{
-	// should in theory work
-	size_t div1 = SIZE_MAX / n1;
-	if (div1 < n2) {
-		return true;
-	}
-	return false;
-}
-
 void *cu_reallocarray(void *mem, size_t new_nel, size_t old_nel, size_t elem_size, cu_alloc *alloc)
 {
-	if (check_mult_overflow(new_nel, elem_size)) {
+	size_t result = 0;
+	if (cu_ckd_mul(&result, new_nel, old_nel)) {
 		return NULL;
 	}
 	return cu_realloc(mem, new_nel * elem_size, old_nel * elem_size, alloc);

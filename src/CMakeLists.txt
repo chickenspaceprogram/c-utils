@@ -14,6 +14,14 @@ add_library(CUtils STATIC
 	hashmap.c
 	bitmanip.c
 	string.c
+	../include/cu/alloc.h
+	../include/cu/arena.h
+	../include/cu/bitmanip.h
+	../include/cu/dbgassert.h
+	../include/cu/hashmap.h
+	../include/cu/rand.h
+	../include/cu/siphash.h
+	../include/cu/string.h
 )
 target_include_directories(CUtils PUBLIC ../include)
 
@@ -23,6 +31,7 @@ check_symbol_exists("explicit_bzero" "string.h" HAVE_EXPLICIT_BZERO)
 check_symbol_exists("SecureZeroMemory" "Windows.h" HAVE_SECURE_ZERO_MEMORY)
 check_symbol_exists("memset_s" "string.h" HAVE_MEMSET_S)
 check_symbol_exists("stdc_bit_ceil" "stdbit.h" HAVE_STDC_BIT_CEIL)
+check_symbol_exists("ckd_mul" "stdckdint.h" HAVE_CKD_MUL)
 
 if(HAVE_MEMSET_EXPLICIT)
 	target_compile_definitions(CUtils PRIVATE CU_HAVE_MEMSET_EXPLICIT)
@@ -40,8 +49,14 @@ if(HAVE_MEMSET_S)
 	target_compile_definitions(CUtils PRIVATE CU_HAVE_MEMSET_S)
 endif()
 
+# the following suck, but since they are just detecting C23 features idc
 if(HAVE_STDC_BIT_CEIL)
+	# probably have all of stdbit
 	target_compile_definitions(CUtils PUBLIC CU_HAVE_STDBIT)
+endif()
+if(HAVE_CKD_MUL)
+	# probably have all of ckdint
+	target_compile_definitions(CUtils PUBLIC CU_HAVE_CKDINT)
 endif()
 
 if (EXISTS "/dev/urandom")

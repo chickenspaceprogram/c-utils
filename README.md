@@ -1,39 +1,33 @@
 # c-utils
 
-## A pile of C utilities
+c-utils (usually called just `cu`) is a lightweight sort of compatibility layer
+on top of the standard C library. It is effectively "stuff that should be in
+libc" and "stuff that is in libc but isn't available everywhere."
+
+It's primarily intended for Unix systems, but it runs on Windows if compiled
+with GCC/Clang. Testing is not exhaustive, but it should compile on recent
+GCC/Clang versions, and is intended to neatly fail with a compile error on
+compilers that it doesn't support; I've put some effort to avoid subtle
+nonportable errors.
 
 ## Notes
 
 This library hasn't been designed with an eye towards future ABI compatibility.
-Properly guaranteeing that would probably invalidate the macro-based generics
-approach used here.
+Most structs have public definitions and there is no mechanism to check library
+versions.
 
 This is a fine tradeoff for me, as this library is mostly intended for use in
 my personal projects; I'm going to always end up always statically linking this
-and I recommend you do the same.
+and compiling it along with my other projects; I recommend you do the same.
 
-Because of the necessity for static linking (and the fact that strong-copyleft
-library licenses are a bit rude), I've opted for using the MPL here instead of
-LGPL/GPL.
-
-Also, parts of this library won't compile on MSVC.
-This library uses statement-expressions, which are a GCC/Clang extension and
-unsupported by MSVC.
-Statement-expressions are often the only way to have "nice" C generics, so
-they're unavoidable in my opinion.
-It's possible in future I'll make API changes so that more of the lib works on
-MSVC.
-
-The extra parts of this library are disabled by default. To enable them, define
-`C_UTILS_NONPORTABLE=ON` when invoking CMake.
-
-The nonportable parts of this lib do compile on Windows, however you must use
-MinGW and GCC or Clang.
+With the exception of bugfixes it's intended that any changes that could break
+dependent code will also change function names and will result in compile
+errors in that dependent code.
 
 ## Documentation
 
-The header files have been commented a bit; the code is macro-hell and kinda
-unreadable but you should be able to figure out how to interface with it.
+Documentation isn't great, headers should have enough information to be useful
+though. At some point I'll figure out Doxygen.
 
 Check out the `src/tests` directory for the test cases; there are examples
 for most of the functions in this library there.
@@ -42,12 +36,11 @@ Please report any bugs you encounter!
 
 ## Features
 
-- Generic allocator API
-- Arena allocator
-- Assorted debugging/"safety" allocators
-- Datastructures:
-    - Hashmap
-    - Vector/Arraylist
-    - Deque
-    - Min-heap
-    - C11 threads (wrapper for pthreads)
+- Generic allocator interface
+- A couple types of arenas
+- A system CSPRNG interface
+- A secure hash function for use in hashmaps
+- A hashmap implemented with quadratic probing (chaining hashmap planned also)
+- Bit manipulation and overflow checking functions
+- An assert macro that asserts in both release and debug builds
+- A halfhearted string library
