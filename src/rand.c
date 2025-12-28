@@ -90,7 +90,8 @@ int cu_rand_bytes(uint8_t *buf, size_t nbytes)
 int cu_rand_bytes(uint8_t *buf, size_t nbytes)
 {
 	assert(nbytes <= CU_RAND_MAX);
-	NTSTATUS res = BCryptGenRandom(NULL, buf, nbytes, BCRYPT_USE_SYSTEM_PREFERRED_RNG);
+	NTSTATUS res = BCryptGenRandom(NULL, buf, nbytes,
+		BCRYPT_USE_SYSTEM_PREFERRED_RNG);
 	if (NT_SUCCESS(res)) {
 		return 0;
 	}

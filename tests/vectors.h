@@ -1,7 +1,13 @@
-#include <stdint.h>
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
+// SPDX-License-Identifier: MPL-2.0
 
 // This file is from https://github.com/veorq/SipHash.
-// It's under the CC0 license (provided in this subdirectory)
+// It's under the CC0 license, and I've relicensed it here under the MPL.
+
+#include <stdint.h>
 
 const uint8_t vectors_sip64[64][8] = {
     {

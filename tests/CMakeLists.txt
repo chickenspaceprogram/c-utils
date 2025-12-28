@@ -9,4 +9,5 @@ cmake_minimum_required(VERSION 3.14)
 c_utils_make_test(test_siphash.c PUBLIC CUtils)
 c_utils_make_test(test_arena.c PUBLIC CUtils)
 c_utils_make_test(test_hashmap.c PUBLIC CUtils)
+c_utils_make_test(test_string.c PUBLIC CUtils)
 

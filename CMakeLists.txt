@@ -7,12 +7,18 @@
 cmake_minimum_required(VERSION 3.21)
 project(CUtils C)
 
-# this file does kinda suck but it also does work and i can't be bothered to make it decent
+# this file does kinda suck but it also does work
+# i can't be bothered to make it decent
 
-option(C_UTILS_USE_ASAN "Links c-utils and any of its tests with the ASAN library.")
-option(C_UTILS_DEBUG "Builds a debug version of c-utils and adds extra GCC/Clang-specific compiler flags.")
-option(C_UTILS_CPPCHECK "Uses the cppcheck tool to statically analyze source code when building.")
-option(C_UTILS_CLANG_TIDY "Uses the clang-tidy tool to statically analyze source code when building.")
+option(C_UTILS_USE_ASAN
+"Links c-utils and any of its tests with the ASAN library.")
+option(C_UTILS_DEBUG
+"Builds a debug version of c-utils and adds extra GCC/Clang-specific compiler\n
+flags.")
+option(C_UTILS_CPPCHECK
+"Uses the cppcheck tool to statically analyze source code when building.")
+option(C_UTILS_CLANG_TIDY
+"Uses the clang-tidy tool to statically analyze source code when building.")
 option(C_UTILS_TESTS "Builds c-utils's unit tests.")
 
 set(CMAKE_C_STANDARD 23)
@@ -22,13 +28,19 @@ if(C_UTILS_TESTS)
 endif()
 
 if(C_UTILS_USE_ASAN)
-	message(NOTICE "Option `C_UTILS_USE_ASAN` specified. Linking ASAN and setting `C_UTILS_DEBUG`.")
-	set(CMAKE_CXX_FLAGS "-fsanitize=address -fsanitize-recover=address -fsanitize=undefined -fsanitize=leak")
+	message(NOTICE
+		"Option `C_UTILS_USE_ASAN` specified.\n
+		Linking ASAN and setting `C_UTILS_DEBUG`.")
+	set(CMAKE_CXX_FLAGS
+		"-fsanitize=address -fsanitize-recover=address
+		-fsanitize=undefined -fsanitize=leak")
 	set(C_UTILS_DEBUG ON)
 endif()
 
 if (C_UTILS_DBGFLAGS)
-	message(NOTICE "Option `C_UTILS_DBGFLAGS` specified. Adding extra compile flags.")
+	message(NOTICE
+		"Option `C_UTILS_DBGFLAGS` specified.
+		Adding extra compile flags.")
 	set(CMAKE_CXX_FLAGS "-Wall -Wextra -Wpedantic -Werror")
 endif()
 

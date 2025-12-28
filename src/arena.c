@@ -29,13 +29,17 @@ struct cu_arena_elem {
 	alignas(alignof(max_align_t)) uint8_t buf_start[];
 };
 
-static_assert(alignof(cu_arena_fixed) <= alignof(max_align_t), "Your platform aligns structs weirdly.");
-static_assert(alignof(cu_arena) <= alignof(max_align_t), "Your platform aligns structs weirdly.");
-static_assert(alignof(struct cu_arena_elem) <= alignof(max_align_t), "Your platform aligns structs weirdly.");
+static_assert(alignof(cu_arena_fixed) <= alignof(max_align_t),
+	"Your platform aligns structs weirdly.");
+static_assert(alignof(cu_arena) <= alignof(max_align_t),
+	"Your platform aligns structs weirdly.");
+static_assert(alignof(struct cu_arena_elem) <= alignof(max_align_t),
+	"Your platform aligns structs weirdly.");
 
 cu_arena_fixed *cu_arena_fixed_new(size_t arena_size, cu_alloc *alloc)
 {
-	cu_arena_fixed *arena = cu_malloc(sizeof(struct cu_arena) + arena_size, alloc);
+	cu_arena_fixed *arena = cu_malloc(
+		sizeof(struct cu_arena) + arena_size, alloc);
 	if (arena == NULL)
 		return NULL;
 	arena->end = arena->start + arena_size;
@@ -43,12 +47,17 @@ cu_arena_fixed *cu_arena_fixed_new(size_t arena_size, cu_alloc *alloc)
 	return arena;
 }
 
-void *cu_arena_fixed_aligned_alloc(size_t amt, size_t align, cu_arena_fixed *arena)
-{
+void *
+cu_arena_fixed_aligned_alloc(
+	size_t amt,
+	size_t align,
+	cu_arena_fixed *arena
+) {
 	assert(IS_PWR_2(align));
 	if (amt > (uintptr_t)arena->bump)
 		return NULL; // can't subtract amt from bump ptr
-	uintptr_t new_bump = (uintptr_t)(arena->bump - amt); // ensuring there's enough space
+	// ensuring there's enough space
+	uintptr_t new_bump = (uintptr_t)(arena->bump - amt);
 	new_bump &= ~(align - 1);
 	if ((uint8_t *)new_bump < arena->start)
 		return NULL; // can't find pointer in arena
@@ -99,7 +108,10 @@ void *cu_arena_aligned_alloc(size_t amt, size_t align, cu_arena *arena)
 {
 	size_t reqd_size = max_reqd_size(amt, align);
 	if (reqd_size > arena->default_block_size) {
-		struct cu_arena_elem *new_block = cu_malloc(reqd_size + sizeof(struct cu_arena_elem), arena->alloc);
+		struct cu_arena_elem *new_block = cu_malloc(
+			reqd_size + sizeof(struct cu_arena_elem),
+			arena->alloc
+		);
 		if (new_block == NULL)
 			return NULL;
 		new_block->next = arena->first;
@@ -107,10 +119,13 @@ void *cu_arena_aligned_alloc(size_t amt, size_t align, cu_arena *arena)
 		new_block->bump = new_block->buf_end;
 
 		// block definitely big enough
-		assert((uintptr_t)new_block->bump > amt && "allocated block not large enough");
+		assert((uintptr_t)new_block->bump > amt
+			&& "allocated block not large enough");
 		new_block->bump -= amt;
-		new_block->bump = (uint8_t *)((uintptr_t)new_block->bump & ~(align - 1));
-		assert(new_block->bump >= new_block->buf_start && "allocated block not large enough");
+		new_block->bump =
+			(uint8_t *)((uintptr_t)new_block->bump & ~(align - 1));
+		assert(new_block->bump >= new_block->buf_start
+			&& "allocated block not large enough");
 		arena->first = new_block;
 		return new_block->bump;
 	}
@@ -138,17 +153,23 @@ void *cu_arena_aligned_alloc(size_t amt, size_t align, cu_arena *arena)
 		}
 		elem = elem->next;
 	}
-	struct cu_arena_elem *new_first = cu_malloc(sizeof(struct cu_arena_elem) + arena->default_block_size, arena->alloc);
+	struct cu_arena_elem *new_first = cu_malloc(
+		sizeof(struct cu_arena_elem) + arena->default_block_size,
+		arena->alloc
+	);
 	if (new_first == NULL)
 		return NULL;
 	new_first->next = arena->first;
 	new_first->buf_end = new_first->buf_start + arena->default_block_size;
 	new_first->bump = new_first->buf_end;
 	// will definitely have enough space
-	assert((uintptr_t)new_first->bump >= amt && "allocated block not large enough");
+	assert((uintptr_t)new_first->bump >= amt
+		&& "allocated block not large enough");
 	new_first->bump -= amt;
-	new_first->bump = (uint8_t *)((uintptr_t)new_first->bump & ~(align - 1));
-	assert(new_first->bump >= new_first->buf_start && "allocated block not large enough");
+	new_first->bump =
+		(uint8_t *)((uintptr_t)new_first->bump & ~(align - 1));
+	assert(new_first->bump >= new_first->buf_start
+		&& "allocated block not large enough");
 	arena->first = new_first;
 	return new_first->bump;
 }
@@ -160,7 +181,11 @@ void cu_arena_free(cu_arena *arena)
 		elem = elem->next;
 		cu_free(tmp, tmp->buf_end - (uint8_t *)tmp, arena->alloc);
 	}
-	cu_free(arena, sizeof(cu_arena) + arena->default_block_size, arena->alloc);
+	cu_free(
+		arena,
+		sizeof(cu_arena) + arena->default_block_size,
+		arena->alloc
+	);
 }
 
 static void *arena_alloc(size_t amount, void *ctx)

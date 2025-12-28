@@ -78,14 +78,18 @@ if (WIN32)
 	target_link_libraries(CUtils PRIVATE bcrypt)
 endif()
 
-if (NOT HAVE_URANDOM AND NOT HAVE_GETENTROPY AND NOT HAVE_ARC4RANDOM AND NOT WIN32)
-	message(FATAL_ERROR "Failed to find a suitable random number generation library.")
+if (NOT HAVE_URANDOM AND
+	NOT HAVE_GETENTROPY AND
+	NOT HAVE_ARC4RANDOM AND
+	NOT WIN32)
+	message(FATAL_ERROR
+		"Failed to find a suitable random number generation library.")
 endif() 
 
 
 
-
-function(c_utils_make_test testfilename) # can take libs to link as an optional arg
+# can take libs to link as an optional arg
+function(c_utils_make_test testfilename)
 if (C_UTILS_TESTS)
 	get_filename_component(EXENAME ${testfilename} NAME_WLE)
 	add_executable(${EXENAME} ${testfilename})
