@@ -27,11 +27,19 @@ static void test_cu_arena_fixed_aligned(cu_alloc *alloc)
 {
 	struct cu_arena_fixed *arena = cu_arena_fixed_new(BLOCK_SIZE, alloc);
 	for (size_t i = 0; i < BLOCK_SIZE / sizeof(int); ++i) {
-		volatile int *foo = cu_arena_fixed_aligned_alloc(sizeof(int), alignof(int), arena);
+		volatile int *foo = cu_arena_fixed_aligned_alloc(
+			sizeof(int),
+			alignof(int),
+			arena
+		);
 		dbgassert(foo != NULL);
 		*foo = 1234;
 	}
-	int *asdf = cu_arena_fixed_aligned_alloc(sizeof(int), alignof(int), arena);
+	int *asdf = cu_arena_fixed_aligned_alloc(
+		sizeof(int),
+		alignof(int),
+		arena
+	);
 	dbgassert(asdf == NULL);
 	cu_arena_fixed_free(arena, alloc);
 }
@@ -53,16 +61,20 @@ static void test_cu_arena_aligned(cu_alloc *alloc)
 {
 	struct cu_arena *arena = cu_arena_new(BLOCK_SIZE, alloc);
 	for (size_t i = 0; i < BLOCK_SIZE / sizeof(int); ++i) {
-		volatile int *foo = cu_arena_aligned_alloc(sizeof(int), alignof(int), arena);
+		volatile int *foo = cu_arena_aligned_alloc(
+			sizeof(int),
+			alignof(int),
+			arena
+		);
 		dbgassert(foo != NULL);
 		*foo = 1234;
 	}
 	cu_arena_free(arena);
 }
 
+static_assert(sizeof(int) == alignof(int), "int is weird on your platform");
 int main(void) {
 	test_cu_arena_fixed_nonaligned(NULL);
-	dbgassert(sizeof(int) == alignof(int) && "int is weird on your platform");
 	test_cu_arena_fixed_aligned(NULL);
 	test_cu_arena_nonaligned(NULL);
 	test_cu_arena_aligned(NULL);

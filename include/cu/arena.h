@@ -9,13 +9,18 @@
 #include <stdalign.h>
 #include <cu/alloc.h>
 
-// These arenas can work with nonstandard alignments, but they're optimized to align stuff to alignof(max_align_t).
-// If you frequently need custom alignments, probably use a library designed for that.
+// These arenas can work with nonstandard alignments, but they're optimized to
+// align stuff to alignof(max_align_t).
+//
+// If you frequently need custom alignments, probably use a library designed
+// for that.
 
 // A fixed-size downwards-growing bump allocator.
 //
 // The base pointer is aligned to alignof(max_align_t).
-// To guarantee there's enough buffer size for some arbitrarily-aligned type with an alignment greater than alignof(max_align_t), set your blocksize to (desired_align + desired_blocksize - alignof(max_align_t))
+// To guarantee there's enough buffer size for some arbitrarily-aligned type
+// with an alignment greater than alignof(max_align_t), set your blocksize to
+// (desired_align + desired_blocksize - alignof(max_align_t))
 typedef struct cu_arena_fixed cu_arena_fixed;
 typedef struct cu_arena cu_arena;
 
@@ -24,8 +29,14 @@ cu_arena_fixed *cu_arena_fixed_new(size_t arena_size, cu_alloc *alloc);
 // Allocates `amt` bytes of memory with an alignment of `align`.
 // `align` must be a power of two.
 //
-// If the alignment is greater than alignof(max_align_t), this function might be likely to fail. Ensure you allocate larger blocks than you deem necessary
-void *cu_arena_fixed_aligned_alloc(size_t amt, size_t align, cu_arena_fixed *arena);
+// If the alignment is greater than alignof(max_align_t), this function might
+// be likely to fail if you don't have a large enough blocksize, see above.
+void *
+cu_arena_fixed_aligned_alloc(
+	size_t amt,
+	size_t align,
+	cu_arena_fixed *arena
+);
 
 // Only valid when allocating space for types with "fundamental alignment" as
 // defined by the C standard! (malloc also has this limitation)

@@ -7,25 +7,6 @@
 #include <cu/string.h>
 #include <cu/dbgassert.h>
 
-
-/*
-enum {
-	CU_STR_OK = 0,			// Not an error, conversion successful
-
-	CU_STR_EBADBASE = -1,		// Invalid base provided
-	CU_STR_EOUTOFRANGE = -2,	   Integer is out of range, returned
-					   value clamped to minimum or maximum
-					   value for the type   
-	CU_STR_ENOINT = -3,		   String doesn't start with a valid
-					   integer   
-	CU_STR_ESIGN = -4,		   Integer was negative, and was
-					   attempted to be parsed as unsigned.   
-};
-*/
-
-// int cu_str_parse_signed(cu_str str, int base, cu_str *rest, intmax_t *num);
-// int cu_str_parse_unsigned(cu_str str, int base, cu_str *rest, uintmax_t *num);
-
 static void signed_tests(void)
 {
 	cu_str rest_ptr;

@@ -21,7 +21,8 @@
 // to happen in release builds.
 #define dbgassert(ARG) do {\
 	if (!(ARG)) {\
-		fprintf(stderr, "%s:%d: %s: Assertion `%s' failed.\n", __FILE__, __LINE__, __func__, #ARG);\
+		fprintf(stderr, "%s:%d: %s: Assertion `%s' failed.\n",\
+			__FILE__, __LINE__, __func__, #ARG);\
 		fflush(stderr);\
 		abort();\
 	}\

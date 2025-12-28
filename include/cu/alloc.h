@@ -11,8 +11,8 @@
 #include <cu/bitmanip.h>
 
 // A struct defining a generic allocator.
-// You aren't intended to call these function pointers directly from other code;
-// instead, check out the cu_allocator_* functions down below.
+// You aren't intended to call these function pointers directly from other
+// code; instead, check out the cu_allocator_* functions down below.
 typedef struct {
 	// Required function!
 	//
@@ -125,8 +125,8 @@ inline static void *cu_allocarray(size_t nel, size_t elemsize, cu_alloc *alloc)
 	return cu_malloc(nel * elemsize, alloc);
 }
 
-// Frees an array of `nel` elements located at `mem` with the allocator `alloc`.
-// Each element is `elemsize` bytes in size.
+// Frees an array of `nel` elements located at `mem` with the allocator
+// `alloc`. Each element is `elemsize` bytes in size.
 inline static void
 cu_freearray(
 	void *mem,
