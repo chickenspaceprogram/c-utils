@@ -50,7 +50,7 @@ static void test_hashmap(void)
 	};
 	cu_str keystr[16];
 	for (size_t i = 0; i < 16; ++i) {
-		keystr[i] = cu_cstr_cast(keys[i]);
+		keystr[i] = cu_str_from_cstr(keys[i]);
 	}
 	cu_hm hm;
 	int retval = cu_hm_new(&hm, NULL);
@@ -67,7 +67,7 @@ static void test_hashmap(void)
 		dbgassert(strcmp(retstr, vals[i]) == 0);
 
 	}
-	dbgassert(cu_hm_at(&hm, cu_cstr_cast("asdf")) == NULL);
+	dbgassert(cu_hm_at(&hm, cu_str_from_cstr("asdf")) == NULL);
 	cu_hm_free(&hm);
 }
 

@@ -35,14 +35,14 @@ static cu_hm_bucket *cu_hm_find_bucket(cu_hm *map, cu_str str)
 	if (map->capacity == 0)
 		return NULL;
 
-	uint64_t index = cu_strhash(str, &map->key) & (map->capacity - 1);
+	uint64_t index = cu_str_hash(str, &map->key) & (map->capacity - 1);
 	uint64_t inc = 0;
 	for (; ; index = (index + ++inc) & (map->capacity - 1)) {
 		assert(inc < map->capacity);
 		if (map->arr[index].key.buf == NULL)
 			return map->arr + index;
 
-		if (cu_streq(map->arr[index].key, str))
+		if (cu_str_eq(map->arr[index].key, str))
 			return map->arr + index;
 	}
 }
