@@ -14,7 +14,7 @@
 //
 // any number >= 36 is treated as not a digit
 // i did that to make a conditional simpler
-static const int8_t DIGIT_LUT[0x100] = {
+static const uint8_t DIGIT_LUT[0x100] = {
 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 
 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 
 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 
@@ -45,13 +45,15 @@ parse_internal (
 	assert(*num == 0 && "num is invalid");
 	assert(base >= 2 && base <= 36 && "base is invalid");
 	size_t i = 0;
-	size_t digit_val = DIGIT_LUT[str.buf[i++]];
-	if (digit_val >= base) {
+	*num = DIGIT_LUT[str.buf[i++]];
+	if (*num >= base) {
+		*num = 0;
+		*rest = str;
 		return CU_STR_ENOINT; // invalid dig
 	}
 	int retval = 0;
 	for (; i < str.len; ++i) {
-		digit_val = DIGIT_LUT[str.buf[i]];
+		uint8_t digit_val = DIGIT_LUT[str.buf[i]];
 		if (digit_val >= base)
 			break;
 
@@ -67,7 +69,6 @@ parse_internal (
 			}
 			break;
 		}
-		*num *= base;
 		*num += digit_val;
 	}
 	if (rest != NULL) {
@@ -134,6 +135,8 @@ int cu_str_parse_signed(cu_str str, int base, cu_str *rest, intmax_t *num)
 	int result = parse_internal(str, base, rest, &res_int);
 	if (res_int > INTMAX_MAX)
 		*num = (sign > 0) ? INTMAX_MAX : INTMAX_MIN;
+	else
+		*num = sign * res_int;
 	return result;
 }
 int cu_str_parse_unsigned(cu_str str, int base, cu_str *rest, uintmax_t *num)

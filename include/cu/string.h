@@ -38,7 +38,8 @@ static inline uint8_t *cu_str_find(cu_str str, uint8_t chr)
 }
 static inline int cu_str_cmp(cu_str s1, cu_str s2)
 {
-	assert(s1.buf != NULL && s2.buf != NULL && "Cannot compare a null string");
+	assert(s1.buf != NULL && s2.buf != NULL &&
+		"Cannot compare a null string");
 	size_t num_to_cmp = s1.len > s2.len ? s2.len : s1.len;
 	int res = memcmp(s1.buf, s2.buf, num_to_cmp);
 	if (res == 0) {
@@ -53,7 +54,8 @@ static inline int cu_str_cmp(cu_str s1, cu_str s2)
 }
 static inline bool cu_str_eq(cu_str s1, cu_str s2)
 {
-	assert(s1.buf != NULL && s2.buf != NULL && "Cannot compare a null string");
+	assert(s1.buf != NULL && s2.buf != NULL &&
+		"Cannot compare a null string");
 	if (s1.len != s2.len) {
 		return false;
 	}
@@ -80,7 +82,8 @@ static inline cu_str cu_str_substr(cu_str str, size_t start, size_t end)
 static inline cu_str cu_str_rmprefix(cu_str str, size_t n_to_remove)
 {
 	assert(str.buf != NULL && "Cannot get a substring from a null string");
-	assert(n_to_remove <= str.len && "Removed too many characters from string");
+	assert(n_to_remove <= str.len &&
+		"Removed too many characters from string");
 	str.buf += n_to_remove;
 	str.len -= n_to_remove;
 	return str;
@@ -88,7 +91,8 @@ static inline cu_str cu_str_rmprefix(cu_str str, size_t n_to_remove)
 static inline cu_str cu_str_rmsuffix(cu_str str, size_t n_to_remove)
 {
 	assert(str.buf != NULL && "Cannot get a substring from a null string");
-	assert(n_to_remove <= str.len && "Removed too many characters from string");
+	assert(n_to_remove <= str.len &&
+		"Removed too many characters from string");
 	str.len -= n_to_remove;
 	return str;
 }
@@ -105,7 +109,8 @@ enum {
 	CU_STR_ENOINT = -3,		/* String doesn't start with a valid
 					   integer */
 	CU_STR_ESIGN = -4,		/* Integer was negative, and was
-					   attempted to be parsed as unsigned. */
+					   attempted to be parsed as
+					   unsigned. */
 };
 // Attempts to parse a signed integer from `str`.
 //
