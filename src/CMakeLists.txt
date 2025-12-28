@@ -22,6 +22,7 @@ add_library(CUtils STATIC
 	../include/cu/rand.h
 	../include/cu/siphash.h
 	../include/cu/string.h
+	../include/cu/cu.h
 )
 target_include_directories(CUtils PUBLIC ../include)
 
