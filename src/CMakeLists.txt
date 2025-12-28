@@ -13,16 +13,8 @@ add_library(CUtils STATIC
 	siphash.c
 	hashmap.c
 	bitmanip.c
-	include/cu/alloc.h
-	include/cu/arena.h
-	include/cu/dbgassert.h
-	include/cu/hashmap.h
-	include/cu/rand.h
-	include/cu/siphash.h
-	include/cu/string.h
-	include/cu/bitmanip.h
 )
-target_include_directories(CUtils PUBLIC include)
+target_include_directories(CUtils PUBLIC ../include)
 
 include(CheckSymbolExists)
 check_symbol_exists("memset_explicit" "string.h" HAVE_MEMSET_EXPLICIT)
@@ -88,5 +80,3 @@ if (C_UTILS_TESTS)
 	)
 endif()
 endfunction()
-
-add_subdirectory(tests)

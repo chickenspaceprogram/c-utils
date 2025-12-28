@@ -7,7 +7,7 @@
 #define SIPHASH_C 2
 #define SIPHASH_D 4
 #include <cu/dbgassert.h>
-#include "../siphash.c"
+#include "../src/siphash.c"
 #include "vectors.h"
 
 static cu_siphash_key SIPHASH_KEY_DEFAULT = {

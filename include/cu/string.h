@@ -86,3 +86,31 @@ static inline cu_str cu_str_rmsuffix(cu_str str, size_t n_to_remove)
 	str.len -= n_to_remove;
 	return str;
 }
+
+
+// cu_str_parse_* error codes
+enum {
+	CU_STR_OK = 0,			// Not an error, conversion successful
+
+	CU_STR_EBADBASE = -1,		// Invalid base provided
+	CU_STR_EOUTOFRANGE = -2,	/* Integer is out of range, returned
+					   value clamped to minimum or maximum
+					   value for the type */
+	CU_STR_ENOINT = -3,		/* String doesn't start with a valid
+					   integer */
+	CU_STR_ESIGN = -4,		/* Integer was negative, and was
+					   attempted to be parsed as unsigned. */
+};
+// Attempts to parse a signed integer from `str`.
+//
+// If successful, `*num` is set to the value found, and if `rest != NULL`,
+// `rest` is set to contain the remainder of the string. 0 is then returned.
+//
+// On failure, an error code is returned. This code is guaranteed to be < 0.
+//
+// Numbers are interpreted identically to `strtol` and friends.
+// Any base from 2-36 (inclusive) is valid. A base of 0 will cause the number
+// to be interpreted as hex if the `0x` prefix is found, octal if the first
+// digit is 0, and decimal otherwise.
+int cu_str_parse_signed(cu_str str, int base, cu_str *rest, intmax_t *num);
+int cu_str_parse_unsigned(cu_str str, int base, cu_str *rest, uintmax_t *num);

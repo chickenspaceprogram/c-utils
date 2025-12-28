@@ -61,3 +61,4 @@ if (C_UTILS_CLANG_TIDY)
 endif()
 
 add_subdirectory(src)
+add_subdirectory(tests)
