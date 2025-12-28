@@ -13,6 +13,7 @@ add_library(CUtils STATIC
 	siphash.c
 	hashmap.c
 	bitmanip.c
+	string.c
 )
 target_include_directories(CUtils PUBLIC ../include)
 
