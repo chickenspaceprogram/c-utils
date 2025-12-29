@@ -59,6 +59,9 @@ static inline void *cu_arena_fixed_alloc(size_t amt, cu_arena_fixed *arena)
 }
 void cu_arena_fixed_free(cu_arena_fixed *arena, cu_alloc *alloc);
 
+// Resets an arena, "freeing" all the items in it, without actually freeing
+// the arena itself.
+void cu_arena_fixed_rst(cu_arena_fixed *arena);
 void cu_arena_fixed_cast(cu_alloc *alloc, cu_arena_fixed *arena);
 
 
@@ -70,6 +73,10 @@ static inline void *cu_arena_alloc(size_t amt, cu_arena *arena)
 	return cu_arena_aligned_alloc(amt, alignof(max_align_t), arena);
 }
 void cu_arena_free(cu_arena *arena);
+
+// Resets an arena, "freeing" all the items in it, without actually freeing
+// the arena itself.
+void cu_arena_rst(cu_arena *arena);
 
 void cu_arena_cast(cu_alloc *alloc, cu_arena *arena);
 

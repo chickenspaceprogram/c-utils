@@ -70,6 +70,11 @@ void cu_arena_fixed_free(cu_arena_fixed *arena, cu_alloc *alloc)
 	cu_free(arena, arena->end - (uint8_t *)arena, alloc);
 }
 
+void cu_arena_fixed_rst(cu_arena_fixed *arena)
+{
+	arena->bump = arena->end;
+}
+
 static void *arena_allocator_alloc(size_t amount, void *ctx)
 {
 	cu_arena_fixed *arena = ctx;
@@ -186,6 +191,15 @@ void cu_arena_free(cu_arena *arena)
 		sizeof(cu_arena) + arena->default_block_size,
 		arena->alloc
 	);
+}
+void cu_arena_rst(cu_arena *arena)
+{
+	arena->bump = arena->buf_start + arena->default_block_size;
+	for (struct cu_arena_elem *elem = arena->first; elem != NULL;
+		elem = elem->next
+	) {
+		elem->bump = elem->buf_end;
+	}
 }
 
 static void *arena_alloc(size_t amount, void *ctx)
