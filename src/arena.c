@@ -4,11 +4,10 @@
 
 // SPDX-License-Identifier: MPL-2.0
 
-#include <cu/arena.h>
 #include <stdint.h>
 #include <assert.h>
-
-#define IS_PWR_2(V) ((V) && !((V) & ((V) - 1)))
+#include <cu/arena.h>
+#include <cu/bitmanip.h>
 
 struct cu_arena_fixed {
 	uint8_t *end;
@@ -18,7 +17,7 @@ struct cu_arena_fixed {
 struct cu_arena {
 	struct cu_arena_elem *first;
 	cu_alloc *alloc;
-	size_t default_block_size;
+	size_t init_block_size;
 	uint8_t *bump;
 	alignas(alignof(max_align_t)) uint8_t buf_start[];
 };
@@ -53,7 +52,7 @@ cu_arena_fixed_aligned_alloc(
 	size_t align,
 	cu_arena_fixed *arena
 ) {
-	assert(IS_PWR_2(align));
+	assert(cu_bit_ceil(align) == align);
 	if (amt > (uintptr_t)arena->bump)
 		return NULL; // can't subtract amt from bump ptr
 	// ensuring there's enough space
@@ -91,19 +90,18 @@ void cu_arena_fixed_cast(cu_alloc *alloc, cu_arena_fixed *arena)
 
 cu_arena *cu_arena_new(size_t block_size, cu_alloc *alloc)
 {
-	if (block_size < alignof(max_align_t))
-		block_size = alignof(max_align_t);
-	cu_arena *arena = cu_malloc(sizeof(cu_arena) + block_size, alloc);
+	size_t init_block_size = cu_bit_ceil(block_size);
+	cu_arena *arena = cu_malloc(sizeof(cu_arena) + init_block_size, alloc);
 	if (arena == NULL)
 		return NULL;
 	arena->first = NULL;
 	arena->alloc = alloc;
-	arena->default_block_size = block_size;
-	arena->bump = arena->buf_start + block_size;
+	arena->init_block_size = init_block_size;
+	arena->bump = arena->buf_start + init_block_size;
 	return arena;
 }
 
-static size_t max_reqd_size(size_t amt, size_t align)
+static inline size_t max_reqd_size(size_t amt, size_t align)
 {
 	if (align <= alignof(max_align_t))
 		return amt;
@@ -111,29 +109,6 @@ static size_t max_reqd_size(size_t amt, size_t align)
 }
 void *cu_arena_aligned_alloc(size_t amt, size_t align, cu_arena *arena)
 {
-	size_t reqd_size = max_reqd_size(amt, align);
-	if (reqd_size > arena->default_block_size) {
-		struct cu_arena_elem *new_block = cu_malloc(
-			reqd_size + sizeof(struct cu_arena_elem),
-			arena->alloc
-		);
-		if (new_block == NULL)
-			return NULL;
-		new_block->next = arena->first;
-		new_block->buf_end = arena->buf_start + reqd_size;
-		new_block->bump = new_block->buf_end;
-
-		// block definitely big enough
-		assert((uintptr_t)new_block->bump > amt
-			&& "allocated block not large enough");
-		new_block->bump -= amt;
-		new_block->bump =
-			(uint8_t *)((uintptr_t)new_block->bump & ~(align - 1));
-		assert(new_block->bump >= new_block->buf_start
-			&& "allocated block not large enough");
-		arena->first = new_block;
-		return new_block->bump;
-	}
 	if ((uintptr_t)arena->bump >= amt) {
 		uintptr_t new_bump = (uintptr_t)(arena->bump - amt);
 		new_bump &= ~(align - 1);
@@ -141,31 +116,41 @@ void *cu_arena_aligned_alloc(size_t amt, size_t align, cu_arena *arena)
 			arena->bump = (uint8_t *)new_bump;
 			return arena->bump;
 		}
-		// not enough space, oh well, check the linked list
 	}
+	// else: not enough space! check linked list
 
-	struct cu_arena_elem *elem = arena->first;
-	while (elem != NULL) {
+	size_t nbytes = arena->init_block_size;
+	for (struct cu_arena_elem *elem = arena->first;
+		elem != NULL;
+		elem = elem->next
+	) {
+		nbytes += elem->buf_end - elem->buf_start;
 		if ((uintptr_t)elem->bump < amt)
 			// in the unlikely case we can't subtract amt from the
-			// bump ptr, continue
+			// bump ptr, there's no space, continue
 			continue;
+
 		uintptr_t new_bump = (uintptr_t)(elem->bump - amt);
 		new_bump &= ~(align - 1);
 		if ((uint8_t *)new_bump >= elem->buf_start) {
 			elem->bump = (uint8_t *)new_bump;
 			return arena->bump; // found some space!
 		}
-		elem = elem->next;
 	}
+	// no place in linked list! get a new node
+	
+	
+	assert(cu_bit_ceil(nbytes) == nbytes
+		&& "nbytes should be a power of two");
+	
+	size_t alloc_sz =
+		cu_bit_ceil(nbytes + max_reqd_size(amt, align)) - nbytes;
 	struct cu_arena_elem *new_first = cu_malloc(
-		sizeof(struct cu_arena_elem) + arena->default_block_size,
-		arena->alloc
-	);
+		sizeof(struct cu_arena_elem) + alloc_sz, arena->alloc);
 	if (new_first == NULL)
 		return NULL;
 	new_first->next = arena->first;
-	new_first->buf_end = new_first->buf_start + arena->default_block_size;
+	new_first->buf_end = new_first->buf_start + alloc_sz;
 	new_first->bump = new_first->buf_end;
 	// will definitely have enough space
 	assert((uintptr_t)new_first->bump >= amt
@@ -188,13 +173,13 @@ void cu_arena_free(cu_arena *arena)
 	}
 	cu_free(
 		arena,
-		sizeof(cu_arena) + arena->default_block_size,
+		sizeof(cu_arena) + arena->init_block_size,
 		arena->alloc
 	);
 }
 void cu_arena_rst(cu_arena *arena)
 {
-	arena->bump = arena->buf_start + arena->default_block_size;
+	arena->bump = arena->buf_start + arena->init_block_size;
 	for (struct cu_arena_elem *elem = arena->first; elem != NULL;
 		elem = elem->next
 	) {
