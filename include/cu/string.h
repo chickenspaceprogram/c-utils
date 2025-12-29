@@ -64,6 +64,10 @@ static inline bool cu_str_eq(cu_str s1, cu_str s2)
 	}
 	return false;
 }
+static inline bool cu_str_isnil(cu_str str)
+{
+	return str.buf == NULL && str.len == 0;
+}
 
 static inline uint64_t cu_str_hash(cu_str str, const cu_siphash_key *key)
 {
