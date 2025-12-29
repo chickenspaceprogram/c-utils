@@ -149,10 +149,13 @@ void *cu_arena_aligned_alloc(size_t amt, size_t align, cu_arena *arena)
 		sizeof(struct cu_arena_elem) + alloc_sz, arena->alloc);
 	if (new_first == NULL)
 		return NULL;
+
 	new_first->next = arena->first;
 	new_first->buf_end = new_first->buf_start + alloc_sz;
 	new_first->bump = new_first->buf_end;
+	arena->first = new_first;
 	// will definitely have enough space
+	
 	assert((uintptr_t)new_first->bump >= amt
 		&& "allocated block not large enough");
 	new_first->bump -= amt;
@@ -160,7 +163,6 @@ void *cu_arena_aligned_alloc(size_t amt, size_t align, cu_arena *arena)
 		(uint8_t *)((uintptr_t)new_first->bump & ~(align - 1));
 	assert(new_first->bump >= new_first->buf_start
 		&& "allocated block not large enough");
-	arena->first = new_first;
 	return new_first->bump;
 }
 void cu_arena_free(cu_arena *arena)
