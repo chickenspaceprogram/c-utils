@@ -4,7 +4,9 @@
 
 // SPDX-License-Identifier: MPL-2.0
 
-#pragma once
+#ifndef CU_DBGASSERT_H
+#define CU_DBGASSERT_H
+
 #include <stdlib.h>
 #include <stdio.h>
 
@@ -27,3 +29,6 @@
 		abort();\
 	}\
 } while (0)
+
+
+#endif // CU_DBGASSERT_H

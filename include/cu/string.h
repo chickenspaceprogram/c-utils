@@ -4,7 +4,9 @@
 
 // SPDX-License-Identifier: MPL-2.0
 
-#pragma once
+#ifndef CU_STRING_H
+#define CU_STRING_H
+
 #include <stdint.h>
 #include <stddef.h>
 #include <string.h>
@@ -129,3 +131,5 @@ enum {
 // digit is 0, and decimal otherwise.
 int cu_str_parse_signed(cu_str str, int base, cu_str *rest, intmax_t *num);
 int cu_str_parse_unsigned(cu_str str, int base, cu_str *rest, uintmax_t *num);
+
+#endif // CU_STRING_H

@@ -4,7 +4,9 @@
 
 // SPDX-License-Identifier: MPL-2.0
 
-#pragma once
+#ifndef CU_ARENA_H
+#define CU_ARENA_H
+
 #include <stddef.h>
 #include <stdalign.h>
 #include <cu/alloc.h>
@@ -87,3 +89,4 @@ void cu_arena_rst(cu_arena *arena);
 
 void cu_arena_cast(cu_alloc *alloc, cu_arena *arena);
 
+#endif // CU_ARENA_H

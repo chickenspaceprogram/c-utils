@@ -7,7 +7,8 @@
 
 // if you're lazy and want to include the entire lib, include this
 
-#pragma once
+#ifndef CU_CU_H
+#define CU_CU_H
 
 #include <cu/alloc.h>
 #include <cu/arena.h>
@@ -17,3 +18,5 @@
 #include <cu/rand.h>
 #include <cu/siphash.h>
 #include <cu/string.h>
+
+#endif // CU_CU_H

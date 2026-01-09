@@ -4,7 +4,9 @@
 
 // SPDX-License-Identifier: MPL-2.0
 
-#pragma once
+#ifndef CU_HASHMAP_H
+#define CU_HASHMAP_H
+
 #include <cu/string.h>
 #include <cu/arena.h>
 
@@ -93,8 +95,6 @@ static inline int cu_hm_cpy_insert(cu_hm_cpy *map, cu_str key, void *value)
 	memcpy(new_key, key.buf, key.len);
 	key.buf = new_key;
 	return cu_hm_insert(&map->hm, key, value);
-	
-	
 }
 static inline int cu_hm_cpy_reserve(cu_hm_cpy *map, uint64_t nel)
 {
@@ -105,4 +105,4 @@ static inline cu_hm_iter cu_hm_cpy_begin(cu_hm_cpy *map)
 	return cu_hm_begin(&map->hm);
 }
 
-
+#endif // CU_HASHMAP_H

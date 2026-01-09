@@ -4,7 +4,9 @@
 
 // SPDX-License-Identifier: MPL-2.0
 
-#pragma once
+#ifndef CU_RAND_H
+#define CU_RAND_H
+
 #include <stddef.h>
 #include <stdint.h>
 
@@ -18,3 +20,5 @@
 #define CU_RAND_MAX 256
 
 int cu_rand_bytes(uint8_t *buf, size_t nbytes);
+
+#endif

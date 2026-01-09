@@ -4,7 +4,9 @@
 
 // SPDX-License-Identifier: MPL-2.0
 
-#pragma once
+#ifndef CU_ALLOC_H
+#define CU_ALLOC_H
+
 
 #include <stddef.h>
 #include <stdlib.h>
@@ -196,3 +198,4 @@ cu_reallocf(
 	return result;
 }
 
+#endif // CU_ALLOC_H

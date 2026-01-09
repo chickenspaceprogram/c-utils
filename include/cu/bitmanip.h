@@ -4,12 +4,14 @@
 
 // SPDX-License-Identifier: MPL-2.0
 
+#ifndef CU_BITMANIP_H
+#define CU_BITMANIP_H
+
 
 // This file contains some redefinitions of a few C23 features that I found
 // useful. They are not available on all compilers so more limited fallback
 // versions are provided here.
 
-#pragma once
 #include <stddef.h>
 #include <stdint.h>
 
@@ -24,7 +26,7 @@
 
 size_t cu_bit_ceil(size_t val);
 
-#endif
+#endif // CU_HAVE_STDBIT
 
 // cu_ckd_mul is identical to ckd_mul in C23, except RESULT cannot point to A
 // or B.
@@ -40,4 +42,6 @@ size_t cu_bit_ceil(size_t val);
 	((A) != 0 && ((A) * (B)) / (A) != (B))\
 )
 
-#endif
+#endif // CU_HAVE_CKDINT
+
+#endif // CU_BITMANIP_H

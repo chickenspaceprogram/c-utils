@@ -4,7 +4,9 @@
 
 // SPDX-License-Identifier: MPL-2.0
 
-#pragma once
+#ifndef CU_SIPHASH_H
+#define CU_SIPHASH_H
+
 #include <stdint.h>
 #include <stddef.h>
 
@@ -64,3 +66,4 @@ uint64_t cu_siphash_hash(
 	size_t size
 );
 
+#endif // CU_SIPHASH_H
