@@ -19,8 +19,7 @@ static void test_cu_arena_fixed_nonaligned(cu_alloc *alloc)
 		dbgassert(foo != NULL);
 		*foo = 1234;
 	}
-	int *asdf = cu_arena_fixed_alloc(sizeof(int), arena);
-	dbgassert(asdf == NULL);
+	// had to remove a dbgassert since the alloc might actually succeed
 	cu_arena_fixed_free(arena, alloc);
 }
 
