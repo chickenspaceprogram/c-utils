@@ -9,6 +9,13 @@
 #include <stdalign.h>
 #include <cu/alloc.h>
 
+#ifdef _MSC_VER
+// i despise MSVC
+#	define CU_MAX_ALIGN 16
+#else
+#	define CU_MAX_ALIGN alignof(max_align_t)
+#endif
+
 // These arenas can work with nonstandard alignments, but they're optimized to
 // align stuff to alignof(max_align_t).
 //
@@ -55,7 +62,7 @@ cu_arena_fixed_aligned_alloc(
 // types with small alignments consecutive to each other.
 static inline void *cu_arena_fixed_alloc(size_t amt, cu_arena_fixed *arena)
 {
-	return cu_arena_fixed_aligned_alloc(amt, alignof(max_align_t), arena);
+	return cu_arena_fixed_aligned_alloc(amt, CU_MAX_ALIGN, arena);
 }
 void cu_arena_fixed_free(cu_arena_fixed *arena, cu_alloc *alloc);
 
@@ -70,7 +77,7 @@ cu_arena *cu_arena_new(size_t fst_block_size, cu_alloc *alloc);
 void *cu_arena_aligned_alloc(size_t amt, size_t align, cu_arena *arena);
 static inline void *cu_arena_alloc(size_t amt, cu_arena *arena)
 {
-	return cu_arena_aligned_alloc(amt, alignof(max_align_t), arena);
+	return cu_arena_aligned_alloc(amt, CU_MAX_ALIGN, arena);
 }
 void cu_arena_free(cu_arena *arena);
 
