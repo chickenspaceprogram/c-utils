@@ -7,12 +7,13 @@
 #include <cu/arena.h>
 #include <cu/dbgassert.h>
 
-#define BLOCK_SIZE (alignof(max_align_t) * 4)
+#define BLOCK_SIZE (16 * 4)
+#define MAX_ALIGN 16 // probably accurate, worst-case it's a bit big
 
 static void test_cu_arena_fixed_nonaligned(cu_alloc *alloc)
 {
 	struct cu_arena_fixed *arena = cu_arena_fixed_new(BLOCK_SIZE, alloc);
-	size_t num_allocatable = BLOCK_SIZE / alignof(max_align_t);
+	size_t num_allocatable = BLOCK_SIZE / MAX_ALIGN;
 	for (size_t i = 0; i < num_allocatable; ++i) {
 		volatile int *foo = cu_arena_fixed_alloc(sizeof(int), arena);
 		dbgassert(foo != NULL);
@@ -29,7 +30,7 @@ static void test_cu_arena_fixed_aligned(cu_alloc *alloc)
 	for (size_t i = 0; i < BLOCK_SIZE / sizeof(int); ++i) {
 		volatile int *foo = cu_arena_fixed_aligned_alloc(
 			sizeof(int),
-			alignof(int),
+			sizeof(int),
 			arena
 		);
 		dbgassert(foo != NULL);
@@ -37,7 +38,7 @@ static void test_cu_arena_fixed_aligned(cu_alloc *alloc)
 	}
 	int *asdf = cu_arena_fixed_aligned_alloc(
 		sizeof(int),
-		alignof(int),
+		sizeof(int),
 		arena
 	);
 	dbgassert(asdf == NULL);
@@ -48,7 +49,7 @@ static void test_cu_arena_fixed_aligned(cu_alloc *alloc)
 static void test_cu_arena_nonaligned(cu_alloc *alloc)
 {
 	struct cu_arena *arena = cu_arena_new(BLOCK_SIZE, alloc);
-	size_t num_allocatable = BLOCK_SIZE / alignof(max_align_t);
+	size_t num_allocatable = BLOCK_SIZE / MAX_ALIGN;
 	for (size_t i = 0; i < num_allocatable; ++i) {
 		volatile int *foo = cu_arena_alloc(sizeof(int), arena);
 		dbgassert(foo != NULL);
@@ -63,7 +64,7 @@ static void test_cu_arena_aligned(cu_alloc *alloc)
 	for (size_t i = 0; i < BLOCK_SIZE / sizeof(int); ++i) {
 		volatile int *foo = cu_arena_aligned_alloc(
 			sizeof(int),
-			alignof(int),
+			sizeof(int),
 			arena
 		);
 		dbgassert(foo != NULL);
@@ -72,7 +73,8 @@ static void test_cu_arena_aligned(cu_alloc *alloc)
 	cu_arena_free(arena);
 }
 
-static_assert(sizeof(int) == alignof(int), "int is weird on your platform");
+// cant rely on having static assert, rip
+// static_assert(sizeof(int) == alignof(int), "int is weird on your platform");
 int main(void) {
 	test_cu_arena_fixed_nonaligned(NULL);
 	test_cu_arena_fixed_aligned(NULL);

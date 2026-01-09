@@ -12,28 +12,21 @@
 struct cu_arena_fixed {
 	uint8_t *end;
 	uint8_t *bump;
-	alignas(alignof(max_align_t)) uint8_t start[];
+	uint8_t start[];
 };
 struct cu_arena {
 	struct cu_arena_elem *first;
 	cu_alloc *alloc;
 	size_t init_block_size;
 	uint8_t *bump;
-	alignas(alignof(max_align_t)) uint8_t buf_start[];
+	uint8_t buf_start[];
 };
 struct cu_arena_elem {
 	struct cu_arena_elem *next;
 	uint8_t *buf_end;
 	uint8_t *bump;
-	alignas(alignof(max_align_t)) uint8_t buf_start[];
+	uint8_t buf_start[];
 };
-
-static_assert(alignof(cu_arena_fixed) <= alignof(max_align_t),
-	"Your platform aligns structs weirdly.");
-static_assert(alignof(cu_arena) <= alignof(max_align_t),
-	"Your platform aligns structs weirdly.");
-static_assert(alignof(struct cu_arena_elem) <= alignof(max_align_t),
-	"Your platform aligns structs weirdly.");
 
 cu_arena_fixed *cu_arena_fixed_new(size_t arena_size, cu_alloc *alloc)
 {
@@ -103,9 +96,7 @@ cu_arena *cu_arena_new(size_t block_size, cu_alloc *alloc)
 
 static inline size_t max_reqd_size(size_t amt, size_t align)
 {
-	if (align <= alignof(max_align_t))
-		return amt;
-	return amt + align - alignof(max_align_t);
+	return amt + align; // slightly inefficient but fuck it
 }
 void *cu_arena_aligned_alloc(size_t amt, size_t align, cu_arena *arena)
 {

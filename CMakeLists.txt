@@ -21,7 +21,7 @@ option(C_UTILS_CLANG_TIDY
 "Uses the clang-tidy tool to statically analyze source code when building.")
 option(C_UTILS_TESTS "Builds c-utils's unit tests.")
 
-set(CMAKE_C_STANDARD 23)
+set(CMAKE_C_STANDARD 11)
 
 if(C_UTILS_TESTS)
 	include(CTest)
