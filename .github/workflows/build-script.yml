@@ -21,21 +21,27 @@ jobs:
         build_type: [Release, Debug]
         c_compiler: [gcc, clang, cl]
         cpp_compiler: [g++, clang++, cl]
-        generator: [Ninja]
+        generator: [Ninja, "Visual Studio 17 2022"]
 
         exclude:
           - c_compiler: gcc
             cpp_compiler: clang++
           - c_compiler: gcc
             cpp_compiler: cl
+          - c_compiler: gcc
+            generator: "Visual Studio 17 2022"
           - c_compiler: clang
             cpp_compiler: g++
           - c_compiler: clang
             cpp_compiler: cl
+          - c_compiler: clang
+            generator: "Visual Studio 17 2022"
           - c_compiler: cl
             cpp_compiler: g++
           - c_compiler: cl
             cpp_compiler: clang++
+          - c_compiler: cl
+            generator: Ninja
           - os: ubuntu-24.04
             c_compiler: cl
           - os: macos-latest
