@@ -19,6 +19,7 @@ add_library(CUtils STATIC
 	../include/cu/bitmanip.h
 	../include/cu/dbgassert.h
 	../include/cu/hashmap.h
+	../include/cu/list.h
 	../include/cu/rand.h
 	../include/cu/siphash.h
 	../include/cu/string.h
