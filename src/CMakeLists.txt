@@ -27,7 +27,7 @@ add_library(CUtils STATIC
 )
 target_include_directories(CUtils PUBLIC ../include)
 if(MSVC)
-	target_compile_options(CUtils PUBLIC "/Zc:preprocessor")
+	set(CMAKE_C_FLAGS "/Zc:preprocessor")
 endif()
 
 include(CheckSymbolExists)
