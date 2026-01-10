@@ -51,11 +51,10 @@
 //
 
 
-// Casts a list back to the type of its container.
-// TYPE must not contain a comma, be sensible
+// Casts a pointer to an element in a struct to a pointer to the type of its
+// container. TYPE must not contain a comma, be sensible
 #define cu_container_of(PTR, TYPE, MEMBER)\
 	((TYPE *)((uint8_t *)(PTR) - offsetof(TYPE, MEMBER)))
-
 
 typedef struct cu_slist cu_slist;
 struct cu_slist {
@@ -85,6 +84,7 @@ static inline void cu_dlist_init_head(cu_dlist *dlist_head)
 		cu_slist *: cu_slist_init_head,\
 		cu_dlist *: cu_dlist_init_head\
 	)((HEAD))
+
 
 // The cu_list_for_each* macros iterate through cu_lists.
 //
@@ -151,9 +151,20 @@ static inline void cu_dlist_init_head(cu_dlist *dlist_head)
 		(CURSOR_NAME) != (HEAD);\
 		(CURSOR_NAME) = (TMP_NAME), (TMP_NAME) = (TMP_NAME)->next)
 #define cu_list_for_each_continue_safe(CURSOR_NAME, TMP_NAME, HEAD)\
-	for ((CURSOR_NAME) = (CURSOR_NAME)->next, (TMP_NAME) = (CURSOR_NAME)->next;\
+	for ((CURSOR_NAME) = (TMP_NAME), (TMP_NAME) = (TMP_NAME)->next;\
 		(CURSOR_NAME) != (HEAD);\
 		(CURSOR_NAME) = (TMP_NAME), (TMP_NAME) = (TMP_NAME)->next)
+
+
+// Get the next/prev element in a list given a container containing a cu_list
+#define cu_list_next_cast(CONTAINER, MEMBER)\
+	cu_container_of(&((CONTAINER)->MEMBER.next),\
+		typeof(*(CONTAINER)), MEMBER)
+#define cu_list_prev_cast(CONTAINER, MEMBER)\
+	cu_container_of(&((CONTAINER)->MEMBER.prev),\
+		typeof(*(CONTAINER)), MEMBER)
+#define cu_list_is_head_cast(CONTAINER, MEMBER, HEAD)\
+	(&((CONTAINER)->MEMBER) == (HEAD))
 
 // assumes CURSOR_NAME is a pointer to a type that contains a `cu_slist` or
 // `cu_dlist`; this function will iterate through the container type instead
@@ -162,40 +173,33 @@ static inline void cu_dlist_init_head(cu_dlist *dlist_head)
 // this saves you having to constantly put cu_container_of everywhere
 #define cu_list_for_each_cast(CURSOR_NAME, HEAD, MEMBER_NAME)\
 	for ((CURSOR_NAME) = cu_container_of(\
-			(HEAD)->next, CU_TYPEOF(CURSOR_NAME), MEMBER_NAME\
-		); (CURSOR_NAME) != (HEAD);\
-		(CURSOR_NAME) = cu_container_of(\
-			(CURSOR_NAME)->MEMBER_NAME->next, CU_TYPEOF(CURSOR_NAME), MEMBER_NAME\
-		))
+			(HEAD)->next, CU_TYPEOF(*(CURSOR_NAME)), MEMBER_NAME\
+		); cu_list_is_head_cast((CURSOR_NAME), MEMBER_NAME, (HEAD));\
+		(CURSOR_NAME) = cu_list_next_cast((CURSOR_NAME), MEMBER)\
+	)
 #define cu_list_for_each_cast_continue(CURSOR_NAME, HEAD, MEMBER_NAME)\
-	for ((CURSOR_NAME) = cu_container_of(\
-			(CURSOR_NAME)->next, CU_TYPEOF(CURSOR_NAME), MEMBER_NAME\
-		); (CURSOR_NAME) != (HEAD);\
-		(CURSOR_NAME) = cu_container_of(\
-			(CURSOR_NAME)->MEMBER_NAME->next, CU_TYPEOF(CURSOR_NAME), MEMBER_NAME\
-		))
+	for ((CURSOR_NAME) = cu_list_next_cast((CURSOR_NAME), MEMBER_NAME);\
+		cu_list_is_head_cast((CURSOR_NAME), MEMBER_NAME, (HEAD));\
+		(CURSOR_NAME) = cu_list_next_cast((CURSOR_NAME), MEMBER_NAME)\
+	)
 
 #define cu_list_for_each_cast_safe(CURSOR_NAME, TMP_NAME, HEAD, MEMBER_NAME)\
 	for ((CURSOR_NAME) = cu_container_of(\
-			(HEAD)->next, CU_TYPEOF(CURSOR_NAME), MEMBER_NAME\
-		), (TMP_NAME) = cu_container_of(\
-			(CURSOR_NAME)->next, CU_TYPEOF(CURSOR_NAME), MEMBER_NAME\
-		);\
-		(CURSOR_NAME) != (HEAD);\
-		(CURSOR_NAME) = (TMP_NAME), (TMP_NAME) = cu_container_of(\
-			(TMP_NAME)->next, CU_TYPEOF(CURSOR_NAME), MEMBER_NAME\
-		))
+			(HEAD)->next, CU_TYPEOF(*(CURSOR_NAME)), MEMBER_NAME\
+		), (TMP_NAME) = cu_list_next_cast((CURSOR_NAME), MEMBER_NAME);\
+		cu_list_is_head_cast((CURSOR_NAME), MEMBER_NAME, (HEAD));\
+		(CURSOR_NAME) = (TMP_NAME),\
+			(TMP_NAME) = cu_list_next_cast((TMP_NAME), MEMBER_NAME)\
+	)
 
-#define cu_list_for_each_cast_continue_safe(CURSOR_NAME, TMP_NAME, HEAD, MEMBER_NAME)\
-	for ((CURSOR_NAME) = cu_container_of(\
-			(CURSOR_NAME)->next, CU_TYPEOF(CURSOR_NAME), MEMBER_NAME\
-		), (TMP_NAME) = cu_container_of(\
-			(CURSOR_NAME)->next, CU_TYPEOF(CURSOR_NAME), MEMBER_NAME\
-		);\
-		(CURSOR_NAME) != (HEAD);\
-		(CURSOR_NAME) = (TMP_NAME), (TMP_NAME) = cu_container_of(\
-			(TMP_NAME)->next, CU_TYPEOF(CURSOR_NAME), MEMBER_NAME\
-		))
+#define cu_list_for_each_cast_continue_safe(CURSOR_NAME, TMP_NAME, HEAD,\
+	MEMBER_NAME)\
+	for ((CURSOR_NAME) = (TMP_NAME),\
+			(TMP_NAME) = cu_list_next_cast((TMP_NAME), MEMBER_NAME);\
+		cu_list_is_head_cast((CURSOR_NAME), MEMBER_NAME, (HEAD));\
+		(CURSOR_NAME) = (TMP_NAME),\
+			(TMP_NAME) = cu_list_next_cast((TMP_NAME), MEMBER_NAME)\
+	)
 
 // Reversed iterators; these only work for cu_dlist
 
@@ -211,46 +215,37 @@ static inline void cu_dlist_init_head(cu_dlist *dlist_head)
 		(CURSOR_NAME) != (HEAD);\
 		(CURSOR_NAME) = (TMP_NAME), (TMP_NAME) = (TMP_NAME)->prev)
 #define cu_list_for_each_continue_rev_safe(CURSOR_NAME, TMP_NAME, HEAD)\
-	for ((CURSOR_NAME) = (CURSOR_NAME)->prev,\
-			(TMP_NAME) = (CURSOR_NAME)->prev;\
+	for ((CURSOR_NAME) = (TMP_NAME), (TMP_NAME) = (TMP_NAME)->prev;\
 		(CURSOR_NAME) != (HEAD);\
 		(CURSOR_NAME) = (TMP_NAME), (TMP_NAME) = (TMP_NAME)->prev)
 
 #define cu_list_for_each_cast_rev(CURSOR_NAME, HEAD, MEMBER_NAME)\
 	for ((CURSOR_NAME) = cu_container_of(\
-			(HEAD)->prev, CU_TYPEOF(CURSOR_NAME), MEMBER_NAME\
-		); (CURSOR_NAME) != (HEAD);\
-		(CURSOR_NAME) = cu_container_of(\
-			(CURSOR_NAME)->MEMBER_NAME->prev, CU_TYPEOF(CURSOR_NAME), MEMBER_NAME\
-		))
+			(HEAD)->prev, CU_TYPEOF(*(CURSOR_NAME)), MEMBER_NAME\
+		); cu_list_is_head_cast((CURSOR_NAME), MEMBER_NAME, (HEAD));\
+		(CURSOR_NAME) = cu_list_prev_cast((CURSOR_NAME), MEMBER_NAME)\
+	)
 #define cu_list_for_each_cast_continue_rev(CURSOR_NAME, HEAD, MEMBER_NAME)\
-	for ((CURSOR_NAME) = cu_container_of(\
-			(CURSOR_NAME)->prev, CU_TYPEOF(CURSOR_NAME), MEMBER_NAME\
-		); (CURSOR_NAME) != (HEAD);\
-		(CURSOR_NAME) = cu_container_of(\
-			(CURSOR_NAME)->MEMBER_NAME->prev, CU_TYPEOF(CURSOR_NAME), MEMBER_NAME\
-		))
+	for ((CURSOR_NAME) = cu_list_prev_cast((CURSOR_NAME), MEMBER_NAME);\
+		cu_list_is_head_cast((CURSOR_NAME), MEMBER_NAME, (HEAD));\
+		(CURSOR_NAME) = cu_list_prev_cast((CURSOR_NAME), MEMBER_NAME)\
+	)
 
 #define cu_list_for_each_cast_rev_safe(CURSOR_NAME, TMP_NAME, HEAD, MEMBER_NAME)\
 	for ((CURSOR_NAME) = cu_container_of(\
-			(HEAD)->prev, CU_TYPEOF(CURSOR_NAME), MEMBER_NAME\
-		), (TMP_NAME) = cu_container_of(\
-			(CURSOR_NAME)->prev, CU_TYPEOF(CURSOR_NAME), MEMBER_NAME\
-		);\
-		(CURSOR_NAME) != (HEAD);\
-		(CURSOR_NAME) = (TMP_NAME), (TMP_NAME) = cu_container_of(\
-			(TMP_NAME)->prev, CU_TYPEOF(CURSOR_NAME), MEMBER_NAME\
-		))
+			(HEAD)->prev, CU_TYPEOF(*(CURSOR_NAME)), MEMBER_NAME\
+		), (TMP_NAME) = cu_list_prev_cast((CURSOR_NAME), MEMBER_NAME);\
+		cu_list_is_head_cast((CURSOR_NAME), MEMBER_NAME, (HEAD));\
+		(CURSOR_NAME) = (TMP_NAME),\
+			(TMP_NAME) = cu_list_prev_cast((TMP_NAME), MEMBER_NAME)\
+	)
 #define cu_list_for_each_cast_continue_rev_safe(CURSOR_NAME, TMP_NAME, HEAD, MEMBER_NAME)\
-	for ((CURSOR_NAME) = cu_container_of(\
-			(CURSOR_NAME)->prev, CU_TYPEOF(CURSOR_NAME), MEMBER_NAME\
-		), (TMP_NAME) = cu_container_of(\
-			(CURSOR_NAME)->prev, CU_TYPEOF(CURSOR_NAME), MEMBER_NAME\
-		);\
-		(CURSOR_NAME) != (HEAD);\
-		(CURSOR_NAME) = (TMP_NAME), (TMP_NAME) = cu_container_of(\
-			(TMP_NAME)->prev, CU_TYPEOF(CURSOR_NAME), MEMBER_NAME\
-		))
+	for ((CURSOR_NAME) = (TMP_NAME),\
+		(TMP_NAME) = cu_list_prev_cast((TMP_NAME), MEMBER_NAME);\
+		cu_list_is_head_cast((CURSOR_NAME), MEMBER_NAME, (HEAD));\
+		(CURSOR_NAME) = (TMP_NAME),\
+			(TMP_NAME) = cu_list_prev_cast((TMP_NAME), MEMBER_NAME)\
+	)
 
 // Checks if there are elements in the list described by `HEAD`
 // `HEAD` is a pointer to the list's head.
