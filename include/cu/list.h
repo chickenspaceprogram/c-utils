@@ -159,10 +159,10 @@ static inline void cu_dlist_init_head(cu_dlist *dlist_head)
 // Get the next/prev element in a list given a container containing a cu_list
 #define cu_list_next_cast(CONTAINER, MEMBER)\
 	cu_container_of(&((CONTAINER)->MEMBER.next),\
-		typeof(*(CONTAINER)), MEMBER)
+		CU_TYPEOF(*(CONTAINER)), MEMBER)
 #define cu_list_prev_cast(CONTAINER, MEMBER)\
 	cu_container_of(&((CONTAINER)->MEMBER.prev),\
-		typeof(*(CONTAINER)), MEMBER)
+		CU_TYPEOF(*(CONTAINER)), MEMBER)
 #define cu_list_is_head_cast(CONTAINER, MEMBER, HEAD)\
 	(&((CONTAINER)->MEMBER) == (HEAD))
 
@@ -183,6 +183,7 @@ static inline void cu_dlist_init_head(cu_dlist *dlist_head)
 		(CURSOR_NAME) = cu_list_next_cast((CURSOR_NAME), MEMBER_NAME)\
 	)
 
+// msvc breaks here????
 #define cu_list_for_each_cast_safe(CURSOR_NAME, TMP_NAME, HEAD, MEMBER_NAME)\
 	for ((CURSOR_NAME) = cu_container_of(\
 			(HEAD)->next, CU_TYPEOF(*(CURSOR_NAME)), MEMBER_NAME\
