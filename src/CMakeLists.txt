@@ -26,9 +26,6 @@ add_library(CUtils STATIC
 	../include/cu/cu.h
 )
 target_include_directories(CUtils PUBLIC ../include)
-if(MSVC)
-	set(CMAKE_C_FLAGS "/Zc:preprocessor")
-endif()
 
 include(CheckSymbolExists)
 check_symbol_exists("memset_explicit" "string.h" HAVE_MEMSET_EXPLICIT)
