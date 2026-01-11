@@ -156,12 +156,13 @@ static inline void cu_dlist_init_head(cu_dlist *dlist_head)
 		(CURSOR_NAME) = (TMP_NAME), (TMP_NAME) = (TMP_NAME)->next)
 
 
+// (slist_container *)((uint8_t *)s1->list.next - 8)
 // Get the next/prev element in a list given a container containing a cu_list
 #define cu_list_next_cast(CONTAINER, MEMBER)\
-	cu_container_of(&((CONTAINER)->MEMBER.next),\
+	cu_container_of(((CONTAINER)->MEMBER.next),\
 		CU_TYPEOF(*(CONTAINER)), MEMBER)
 #define cu_list_prev_cast(CONTAINER, MEMBER)\
-	cu_container_of(&((CONTAINER)->MEMBER.prev),\
+	cu_container_of(((CONTAINER)->MEMBER.prev),\
 		CU_TYPEOF(*(CONTAINER)), MEMBER)
 #define cu_list_is_head_cast(CONTAINER, MEMBER, HEAD)\
 	(&((CONTAINER)->MEMBER) == (HEAD))
@@ -292,6 +293,8 @@ static inline bool cu_dlist_is_poisoned(const cu_dlist *elem)
 
 // Adds `new_el` to the list, immediately after the `slist` node.
 //
+// `new_el` must not already be part of `slist`.
+//
 // If `slist` is a list head, this will effectively add an element to the
 // front of the list.
 //
@@ -300,8 +303,8 @@ static inline void cu_slist_add(cu_slist *new_el, cu_slist *slist)
 {
 	assert(slist != NULL && "Cannot add to a null pointer");
 	assert(new_el != NULL && "Cannot add a null pointer to a list");
-	assert(slist->next != NULL
-		&& "Used poisoned list element without reinitializing it");
+	assert(slist->next != NULL && "Used poisoned list");
+
 	new_el->next = slist->next;
 	slist->next = new_el;
 }
@@ -327,14 +330,14 @@ static inline void cu_dlist_add(cu_dlist *new_el, cu_dlist *dlist)
 		cu_dlist *: cu_dlist_add\
 	)((NEW_EL), (LIST))
 
-// Adds `new_el` to the list, immediately after the `dlist` node.
+// Adds `new_el` to the list, immediately before the `dlist` node.
 // This only works for `cu_dlist`.
 //
 // If `dlist` is a list head, this will effectively add an element to the
 // end of the list.
 //
 // Runs in O(1) time.
-static inline void cu_list_add_prev(cu_dlist *dlist, cu_dlist *new_el)
+static inline void cu_list_add_prev(cu_dlist *new_el, cu_dlist *dlist)
 {
 	assert(dlist != NULL && "Cannot add to a null pointer");
 	assert(new_el != NULL && "Cannot add a null pointer to a list");
@@ -406,12 +409,7 @@ static inline void cu_list_del(cu_dlist *elem)
 	assert(elem != NULL && "Cannot delete a null pointer");
 	assert(elem->next != NULL && elem->prev != NULL
 		&& "Tried to delete from a poisoned list");
-	cu_dlist *prev = elem->prev;
-	cu_dlist *next = elem->next;
-	prev->next = next;
-	next->prev = prev;
-
-	cu_list_poison(elem);
+	cu_list_del_next(elem->prev);
 }
 
 // Deletes the element immediately before `list`.
@@ -434,7 +432,67 @@ static inline void cu_list_del_prev(cu_dlist *list)
 	cu_list_poison(el);
 }
 
+// `new_el` must not be already present in `list`
+static inline void cu_slist_replace_next(cu_slist *new_el, cu_slist *list)
+{
+	assert(new_el != NULL && "Cannot replace with a null pointer");
+	assert(list != NULL && "List cannot be a null pointer");
+	assert(!cu_list_empty(list)
+		&& "Cannot replace elements in a list without elements");
+	assert(!cu_list_is_poisoned(list)
+		&& "Cannot replace elements in a poisoned list");
+	
+	cu_list_del_next(list);
+	cu_list_add(new_el, list);
+}
+
+static inline void cu_dlist_replace_next(cu_dlist *new_el, cu_dlist *list)
+{
+	assert(new_el != NULL && "Cannot replace with a null pointer");
+	assert(list != NULL && "List cannot be a null pointer");
+	assert(!cu_list_empty(list)
+		&& "Cannot replace elements in a list without elements");
+	assert(!cu_list_is_poisoned(list)
+		&& "Cannot replace elements in a poisoned list");
+	
+	cu_list_del_next(list);
+	cu_list_add(new_el, list);
+}
+
+#define cu_list_replace_next(NEW_EL, LIST)\
+	_Generic((NEW_EL),\
+		cu_slist *: cu_slist_replace_next,\
+		cu_dlist *: cu_dlist_replace_next\
+	)((NEW_EL), (LIST))
+
+static inline void cu_list_replace(cu_dlist *new_el, cu_dlist *list)
+{
+	assert(new_el != NULL && "Cannot replace with a null pointer");
+	assert(list != NULL && "List cannot be a null pointer");
+	assert(!cu_list_empty(list)
+		&& "Cannot replace elements in a list without elements");
+	assert(!cu_list_is_poisoned(list)
+		&& "Cannot replace elements in a poisoned list");
+	
+	cu_list_replace_next(new_el, list->prev);
+}
+
+static inline void cu_list_replace_prev(cu_dlist *new_el, cu_dlist *list)
+{
+	assert(new_el != NULL && "Cannot replace with a null pointer");
+	assert(list != NULL && "List cannot be a null pointer");
+	assert(!cu_list_empty(list)
+		&& "Cannot replace elements in a list without elements");
+	assert(!cu_list_is_poisoned(list)
+		&& "Cannot replace elements in a poisoned list");
+	
+	cu_list_del_prev(list);
+	cu_list_add_prev(new_el, list);
+}
+
+
 // Swaps the next elements in `l1` and `l2`.
+// l1 and l2 may be identical or may be part of the same list.
 static inline void cu_slist_swap_next(cu_slist *l1, cu_slist *l2)
 {
 	assert(l1 != NULL && "Cannot swap null pointer");
@@ -446,14 +504,29 @@ static inline void cu_slist_swap_next(cu_slist *l1, cu_slist *l2)
 	assert(!cu_list_empty(l1) && "Cannot swap next element of empty list");
 	assert(!cu_list_empty(l2) && "Cannot swap next element of empty list");
 
-	cu_slist *l1_elem = l1->next;
-	cu_slist *l2_elem = l2->next;
+	// this is awful, but when i tried to do it intelligently i couldn't
+	// get it to work
+	//
+	// if it actually causes issues. fix it.
 
-	cu_list_del_next(l1);
-	cu_list_del_next(l2);
-
-	cu_list_add(l2_elem, l1);
-	cu_list_add(l1_elem, l2);
+	if (l1->next == l2) {
+		cu_slist *tmp = l2->next;
+		cu_list_del_next(l1);
+		cu_list_add(l2, tmp);
+	}
+	else if (l2->next == l1) {
+		cu_slist *tmp = l1->next;
+		cu_list_del_next(l2);
+		cu_list_add(l1, tmp);
+	}
+	else {
+		cu_slist *tmp1 = l1->next;
+		cu_slist *tmp2 = l2->next;
+		cu_list_del_next(l1);
+		cu_list_del_next(l2);
+		cu_list_add(tmp1, l2);
+		cu_list_add(tmp2, l1);
+	}
 }
 
 static inline void cu_dlist_swap_next(cu_dlist *l1, cu_dlist *l2)
@@ -467,14 +540,24 @@ static inline void cu_dlist_swap_next(cu_dlist *l1, cu_dlist *l2)
 	assert(!cu_list_empty(l1) && "Cannot swap next element of empty list");
 	assert(!cu_list_empty(l2) && "Cannot swap next element of empty list");
 
-	cu_dlist *l1_elem = l1->next;
-	cu_dlist *l2_elem = l2->next;
-
-	cu_list_del_next(l1);
-	cu_list_del_next(l2);
-
-	cu_list_add(l1, l2_elem);
-	cu_list_add(l2, l1_elem);
+	if (l1->next == l2) {
+		cu_dlist *tmp = l2->next;
+		cu_list_del_next(l1);
+		cu_list_add(l2, tmp);
+	}
+	else if (l2->next == l1) {
+		cu_dlist *tmp = l1->next;
+		cu_list_del_next(l2);
+		cu_list_add(l1, tmp);
+	}
+	else {
+		cu_dlist *tmp1 = l1->next;
+		cu_dlist *tmp2 = l2->next;
+		cu_list_del_next(l1);
+		cu_list_del_next(l2);
+		cu_list_add(tmp1, l2);
+		cu_list_add(tmp2, l1);
+	}
 }
 
 #define cu_list_swap_next(L1, L2)\
@@ -491,21 +574,7 @@ static inline void cu_list_swap(cu_dlist *l1, cu_dlist *l2)
 	assert(!cu_list_is_poisoned(l1) && "Tried to swap poisoned list");
 	assert(!cu_list_is_poisoned(l2) && "Tried to swap poisoned list");
 
-	if (cu_list_empty(l1) && cu_list_empty(l2))
-		return;
-	if (cu_list_empty(l1)) {
-		cu_list_add(l2, l1);
-		cu_list_del(l2);
-		cu_list_init_head(l2);
-	}
-	else if (cu_list_empty(l2)) {
-		cu_list_add(l1, l2);
-		cu_list_del(l1);
-		cu_list_init_head(l1);
-	}
-	else {
-		cu_list_swap_next(l1->prev, l2->prev);
-	}
+	cu_list_swap_next(l1->prev, l2->prev);
 }
 
 static inline void cu_list_swap_prev(cu_dlist *l1, cu_dlist *l2)
@@ -516,20 +585,27 @@ static inline void cu_list_swap_prev(cu_dlist *l1, cu_dlist *l2)
 	assert(!cu_list_is_poisoned(l1) && "Tried to swap poisoned list");
 	assert(!cu_list_is_poisoned(l2) && "Tried to swap poisoned list");
 
-	assert(!cu_list_empty(l1)
-		&& "Cannot swap previous element of empty list");
-	assert(!cu_list_empty(l2)
-		&& "Cannot swap previous element of empty list");
+	assert(!cu_list_empty(l1) && "Cannot swap next element of empty list");
+	assert(!cu_list_empty(l2) && "Cannot swap next element of empty list");
 
-	cu_dlist *l1_elem = l1->prev;
-	cu_dlist *l2_elem = l2->prev;
-
-	cu_list_del_prev(l1);
-	cu_list_del_prev(l2);
-
-	cu_list_add_prev(l1, l2_elem);
-	cu_list_add_prev(l2, l1_elem);
+	if (l1->prev == l2) {
+		cu_dlist *tmp = l2->prev;
+		cu_list_del_prev(l1);
+		cu_list_add_prev(l2, tmp);
+	}
+	else if (l2->prev == l1) {
+		cu_dlist *tmp = l1->prev;
+		cu_list_del_prev(l2);
+		cu_list_add_prev(l1, tmp);
+	}
+	else {
+		cu_dlist *tmp1 = l1->prev;
+		cu_dlist *tmp2 = l2->prev;
+		cu_list_del_prev(l1);
+		cu_list_del_prev(l2);
+		cu_list_add_prev(tmp1, l2);
+		cu_list_add_prev(tmp2, l1);
+	}
 }
-
 
 #endif // CU_LIST_H

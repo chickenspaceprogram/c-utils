@@ -259,10 +259,231 @@ static void test_dlist_iter_rev(void)
 
 }
 
+static void test_slist(void)
+{
+	cu_slist list;
+	cu_list_init_head(&list);
+	dbgassert(cu_list_empty(&list));
+	dbgassert(!cu_list_is_poisoned(&list));
+	cu_list_poison(&list);
+	dbgassert(cu_list_is_poisoned(&list));
+
+	test_slist_init();
+	cu_slist_del_next(&SLIST_HEAD);
+	slist_container *s1 = cu_container_of(SLIST_HEAD.next,
+		slist_container, list);
+	dbgassert(s1->flag_val == 1);
+	slist_container *s2 = cu_list_next_cast(s1, list);
+	dbgassert(s2->flag_val == 2);
+
+	cu_list_swap_next(&s1->list, &s2->list);
+
+	slist_container *fstel = cu_container_of(SLIST_HEAD.next,
+		slist_container, list);
+	dbgassert(fstel->flag_val == 1);
+	slist_container *tmp = cu_list_next_cast(fstel, list);
+	dbgassert(tmp->flag_val == 3);
+	tmp = cu_list_next_cast(tmp, list);
+	dbgassert(tmp->flag_val == 2);
+	dbgassert(cu_list_next_cast(tmp, list)->flag_val == 4);
+
+	cu_list_swap_next(&fstel->list, &tmp->list);
+	
+	tmp = cu_container_of(SLIST_HEAD.next, slist_container, list);
+	dbgassert(tmp->flag_val == 1);
+	tmp = cu_list_next_cast(tmp, list);
+	dbgassert(tmp->flag_val == 4);
+	tmp = cu_list_next_cast(tmp, list);
+	dbgassert(tmp->flag_val == 2);
+	dbgassert(cu_list_next_cast(tmp, list)->flag_val == 3);
+
+
+
+	slist_container another_sl = {
+		.flag_val = 69,
+	};
+
+	cu_list_replace_next(&another_sl.list, &tmp->list);
+	tmp = cu_container_of(SLIST_HEAD.next, slist_container, list);
+	dbgassert(tmp->flag_val == 1);
+	tmp = cu_list_next_cast(tmp, list);
+	dbgassert(tmp->flag_val == 4);
+	tmp = cu_list_next_cast(tmp, list);
+	dbgassert(tmp->flag_val == 2);
+	dbgassert(cu_list_next_cast(tmp, list)->flag_val == 69);
+}
+
+static void test_dlist_next(void)
+{
+	cu_dlist list;
+	cu_list_init_head(&list);
+	dbgassert(cu_list_empty(&list));
+	dbgassert(!cu_list_is_poisoned(&list));
+	cu_list_poison(&list);
+	dbgassert(cu_list_is_poisoned(&list));
+
+	test_dlist_init();
+	cu_list_del_next(&DLIST_HEAD);
+	dlist_container *d1 = cu_container_of(DLIST_HEAD.next,
+		dlist_container, list);
+	dbgassert(d1->flag_val == 1);
+	dlist_container *d2 = cu_list_next_cast(d1, list);
+	dbgassert(d2->flag_val == 2);
+
+	cu_list_swap_next(&d1->list, &d2->list);
+
+	dlist_container *fstel = cu_container_of(DLIST_HEAD.next,
+		dlist_container, list);
+	dbgassert(fstel->flag_val == 1);
+	dlist_container *tmp = cu_list_next_cast(fstel, list);
+	dbgassert(tmp->flag_val == 3);
+	tmp = cu_list_next_cast(tmp, list);
+	dbgassert(tmp->flag_val == 2);
+	dbgassert(cu_list_next_cast(tmp, list)->flag_val == 4);
+
+	cu_list_swap_next(&fstel->list, &tmp->list);
+	
+	tmp = cu_container_of(DLIST_HEAD.next, dlist_container, list);
+	dbgassert(tmp->flag_val == 1);
+	tmp = cu_list_next_cast(tmp, list);
+	dbgassert(tmp->flag_val == 4);
+	tmp = cu_list_next_cast(tmp, list);
+	dbgassert(tmp->flag_val == 2);
+	dbgassert(cu_list_next_cast(tmp, list)->flag_val == 3);
+
+
+
+	dlist_container another_dl = {
+		.flag_val = 69,
+	};
+
+	cu_list_replace_next(&another_dl.list, &tmp->list);
+	tmp = cu_container_of(DLIST_HEAD.next, dlist_container, list);
+	dbgassert(tmp->flag_val == 1);
+	tmp = cu_list_next_cast(tmp, list);
+	dbgassert(tmp->flag_val == 4);
+	tmp = cu_list_next_cast(tmp, list);
+	dbgassert(tmp->flag_val == 2);
+	dbgassert(cu_list_next_cast(tmp, list)->flag_val == 69);
+}
+
+static void test_dlist_cur(void)
+{
+	cu_dlist list;
+	cu_list_init_head(&list);
+	dbgassert(cu_list_empty(&list));
+	dbgassert(!cu_list_is_poisoned(&list));
+	cu_list_poison(&list);
+	dbgassert(cu_list_is_poisoned(&list));
+
+	test_dlist_init();
+	cu_list_del_next(&DLIST_HEAD);
+	dlist_container *d1 = cu_container_of(DLIST_HEAD.next,
+		dlist_container, list);
+	dbgassert(d1->flag_val == 1);
+	dlist_container *d2 = cu_list_next_cast(d1, list);
+	dbgassert(d2->flag_val == 2);
+
+	cu_list_swap(&d1->list, &d2->list);
+
+	dlist_container *fstel = cu_container_of(DLIST_HEAD.next,
+		dlist_container, list);
+	dbgassert(fstel->flag_val == 2);
+	dlist_container *tmp = cu_list_next_cast(fstel, list);
+	dbgassert(tmp->flag_val == 1);
+	tmp = cu_list_next_cast(tmp, list);
+	dbgassert(tmp->flag_val == 3);
+	dbgassert(cu_list_next_cast(tmp, list)->flag_val == 4);
+
+	cu_list_swap(&fstel->list, &tmp->list);
+	
+	tmp = cu_container_of(DLIST_HEAD.next, dlist_container, list);
+	dbgassert(tmp->flag_val == 3);
+	tmp = cu_list_next_cast(tmp, list);
+	dbgassert(tmp->flag_val == 1);
+	tmp = cu_list_next_cast(tmp, list);
+	dbgassert(tmp->flag_val == 2);
+	dbgassert(cu_list_next_cast(tmp, list)->flag_val == 4);
+
+
+
+	dlist_container another_dl = {
+		.flag_val = 69,
+	};
+
+	cu_list_replace(&another_dl.list, &tmp->list);
+	tmp = cu_container_of(DLIST_HEAD.next, dlist_container, list);
+	dbgassert(tmp->flag_val == 3);
+	tmp = cu_list_next_cast(tmp, list);
+	dbgassert(tmp->flag_val == 1);
+	tmp = cu_list_next_cast(tmp, list);
+	dbgassert(tmp->flag_val == 69);
+	dbgassert(cu_list_next_cast(tmp, list)->flag_val == 4);
+}
+
+static void test_dlist_prev(void)
+{
+	cu_dlist list;
+	cu_list_init_head(&list);
+	dbgassert(cu_list_empty(&list));
+	dbgassert(!cu_list_is_poisoned(&list));
+	cu_list_poison(&list);
+	dbgassert(cu_list_is_poisoned(&list));
+
+	test_dlist_init();
+	cu_list_del_prev(&DLIST_HEAD);
+	dlist_container *d1 = cu_container_of(DLIST_HEAD.prev,
+		dlist_container, list);
+	dbgassert(d1->flag_val == 28);
+	dlist_container *d2 = cu_list_prev_cast(d1, list);
+	dbgassert(d2->flag_val == 27);
+
+	cu_list_swap_prev(&d1->list, &d2->list);
+
+	dlist_container *fstel = cu_container_of(DLIST_HEAD.prev,
+		dlist_container, list);
+	dbgassert(fstel->flag_val == 28);
+	dlist_container *tmp = cu_list_prev_cast(fstel, list);
+	dbgassert(tmp->flag_val == 26);
+	tmp = cu_list_prev_cast(tmp, list);
+	dbgassert(tmp->flag_val == 27);
+	dbgassert(cu_list_prev_cast(tmp, list)->flag_val == 25);
+
+	cu_list_swap_prev(&fstel->list, &tmp->list);
+	
+	tmp = cu_container_of(DLIST_HEAD.prev, dlist_container, list);
+	dbgassert(tmp->flag_val == 28);
+	tmp = cu_list_prev_cast(tmp, list);
+	dbgassert(tmp->flag_val == 25);
+	tmp = cu_list_prev_cast(tmp, list);
+	dbgassert(tmp->flag_val == 27);
+	dbgassert(cu_list_prev_cast(tmp, list)->flag_val == 26);
+
+
+
+	dlist_container another_dl = {
+		.flag_val = 69,
+	};
+
+	cu_list_replace_prev(&another_dl.list, &tmp->list);
+	tmp = cu_container_of(DLIST_HEAD.prev, dlist_container, list);
+	dbgassert(tmp->flag_val == 28);
+	tmp = cu_list_prev_cast(tmp, list);
+	dbgassert(tmp->flag_val == 25);
+	tmp = cu_list_prev_cast(tmp, list);
+	dbgassert(tmp->flag_val == 27);
+	dbgassert(cu_list_prev_cast(tmp, list)->flag_val == 69);
+}
+
+
 
 int main(void)
 {
 	test_slist_iter();
 	test_dlist_iter();
 	test_dlist_iter_rev();
+	test_slist();
+	test_dlist_next();
+	test_dlist_cur();
+	test_dlist_prev();
 }
