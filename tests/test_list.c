@@ -475,6 +475,27 @@ static void test_dlist_prev(void)
 	dbgassert(cu_list_prev_cast(tmp, list)->flag_val == 69);
 }
 
+void test_splice(void)
+{
+	cu_dlist head1;
+	cu_dlist head2;
+	cu_list_init_head(&head1);
+	cu_list_init_head(&head2);
+	for (int i = 0; i < 10; ++i) {
+		DLIST_STORAGE[i].flag_val = i;
+		cu_list_add_prev(&DLIST_STORAGE[i].list, &head1);
+	}
+	for (int i = 10; i < 20; ++i) {
+		DLIST_STORAGE[i].flag_val = i;
+		cu_list_add_prev(&DLIST_STORAGE[i].list, &head1);
+	}
+	cu_list_splice(&head1, &head2);
+	dlist_container *tmp = NULL;
+	int i = 0;
+	cu_list_for_each_cast(tmp, &head2, list) {
+		dbgassert(i++ == tmp->flag_val);
+	}
+}
 
 
 int main(void)
@@ -486,4 +507,5 @@ int main(void)
 	test_dlist_next();
 	test_dlist_cur();
 	test_dlist_prev();
+	test_splice();
 }

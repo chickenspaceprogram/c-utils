@@ -176,7 +176,7 @@ static inline void cu_dlist_init_head(cu_dlist *dlist_head)
 	for ((CURSOR_NAME) = cu_container_of(\
 			(HEAD)->next, CU_TYPEOF(*(CURSOR_NAME)), MEMBER_NAME\
 		); cu_list_is_head_cast((CURSOR_NAME), MEMBER_NAME, (HEAD));\
-		(CURSOR_NAME) = cu_list_next_cast((CURSOR_NAME), MEMBER)\
+		(CURSOR_NAME) = cu_list_next_cast((CURSOR_NAME), MEMBER_NAME)\
 	)
 #define cu_list_for_each_cast_continue(CURSOR_NAME, HEAD, MEMBER_NAME)\
 	for ((CURSOR_NAME) = cu_list_next_cast((CURSOR_NAME), MEMBER_NAME);\
@@ -606,6 +606,35 @@ static inline void cu_list_swap_prev(cu_dlist *l1, cu_dlist *l2)
 		cu_list_add_prev(tmp1, l2);
 		cu_list_add_prev(tmp2, l1);
 	}
+}
+
+// Splices the nodes from `head_rm` into `head_keep`.
+//
+// `head_rm` and `head_keep` are the heads of the respective lists.
+//
+// `head_rm` is poisoned after the function exits, `head_keep` is kept and
+// is the new head of the list
+static inline void cu_list_splice(cu_dlist *head_rm, cu_dlist *head_keep)
+{
+	assert(head_rm != NULL && "Cannot splice null pointer");
+	assert(head_keep != NULL && "Cannot splice null pointer");
+
+	assert(!cu_list_is_poisoned(head_rm) && "Tried to splice poisoned list");
+	assert(!cu_list_is_poisoned(head_keep) && "Tried to splice poisoned list");
+
+	// not sure if empty list will cause errors?
+	cu_dlist *begin_rm = head_rm->next;
+	cu_dlist *end_rm = head_rm->prev;
+
+	cu_dlist *begin_keep = head_keep->next;
+
+	begin_rm->prev = head_keep;
+	end_rm->next = begin_keep;
+
+	begin_keep->prev = end_rm;
+	head_keep->next = begin_rm;
+
+	cu_list_poison(head_rm);
 }
 
 #endif // CU_LIST_H
