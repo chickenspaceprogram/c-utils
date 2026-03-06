@@ -1,5 +1,7 @@
 # c-utils
 
+Migrated to [Codeberg](https://codeberg.org/chickenspaceprogram/c-utils).
+
 c-utils (usually called just `cu`) is a lightweight sort of compatibility layer
 on top of the standard C library. It is effectively "stuff that should be in
 libc" and "stuff that is in libc but isn't available everywhere."
